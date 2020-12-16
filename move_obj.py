@@ -8,7 +8,7 @@ p.setGravity(0,0,-10)
 planeId = p.loadURDF("plane.urdf")
 cubeStartPos = [0,0,1]
 cubeStartOrientation = p.getQuaternionFromEuler([0,0,0])
-gripper  = p.loadSDF("ExampleSimWorld-Josh/new/testing2_try.sdf")
+gripper  = p.loadSDF("../ExampleSimWorld-Josh/new/testing2_try.sdf")
 print  ('DESCRIPTION \n', gripper, '\n END')
 boxId = gripper [0]
 cubeId = gripper[1]

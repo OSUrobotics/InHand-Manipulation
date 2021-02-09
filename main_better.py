@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 import setup
 import ObjectsInScene
-import time
 import pybullet as p
+import time
 
 if __name__ == "__main__":
     path_to_human_data = 'Human Study Data/anjali_data_better/filt_josh_2v2_c_none_1.csv'
     human_data = setup.read_file(path_to_human_data)
     camera_view = "TOP"
     open_fingers_pose = (1.5708, 0.0, -1.5708, 0.0)
-    start_grasp_pos = (0.733038, -1.62316, -0.733038, 1.62316) #From human data, measured by eye
+    start_grasp_pos = (0.7, -1.62316, -0.7, 1.62316)
+    # start_grasp_pos = (0.733038, -1.62316, -0.733038, 1.62316) #From human data, measured by eye
     joint_names = ['Base', 'L_Prox', 'L_Dist', 'R_Prox', 'R_Dist']
     path_to_gripper_sdf = 'ExampleSimWorld-Josh/new/testing2_try.sdf'
     (physicsClient, planeID, num_objects, gripperID, objectIDs) = setup.init_sim(path_to_gripper_sdf)
@@ -19,17 +20,17 @@ if __name__ == "__main__":
     print("ALL IDS:{}".format((physicsClient, planeID, num_objects, gripperID, objectID)))
     setup.set_camera_view(camera_view)
     gripper = ObjectsInScene.Manipulator(gripperID, open_fingers_pose, start_grasp_pos, joint_names)
-    print("Position is: {}, Orientation is: {}".format(gripper.pos, gripper.orn))
+    print("Position is: {}, Orientation is: {}".format(gripper.curr_pos, gripper.curr_orn))
     cube = ObjectsInScene.SceneObject(objectID)
-    print("Position is: {}, Orientation is: {}".format(cube.pos, cube.orn))
+    print("Position is: {}, Orientation is: {}".format(cube.curr_pos, cube.curr_orn))
     print("JOINTINFO of Manip: {}".format(gripper.get_joints_info()))
 
-    done_open = gripper.move_fingers_to_pose(gripper.open_fingers_pose)
+    done_open, _ = gripper.move_fingers_to_pose(gripper.open_fingers_pose)
     print("Complete Open? {}".format(done_open))
 
-    done_grasp = gripper.move_fingers_to_pose(gripper.start_grasp_pose)
-    print("Complete Grasp Object? {}".format(done_grasp))
+    done_grasp, contact_points = gripper.move_fingers_to_pose(gripper.start_grasp_pose)#, objectID)
+    print("Complete Grasp Object? {}, Contact  points: {}".format(done_grasp, contact_points))
 
-    done_mov_obj = gripper.manipulate_obj(cube, human_data)
-
+    done_mov_obj = gripper.manipulate_object(cube, human_data)
+    time.sleep(2)
 

@@ -11,6 +11,7 @@ def read_file(filename):
     Convert it  to numpy arrays
     Format: Start pos of hand is origin
     x,y,rmag,f_x,f_y,f_rmag
+    Note: c dir is +x; a dir is +y [from humanstudy data]
     :param filename: Name of file containing human data
     :return: numpy  array containing the information from the file
     """

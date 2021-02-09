@@ -2,8 +2,10 @@
 import pybullet as p
 # import setup
 import numpy as np
-from math import isclose
+from math import isclose, radians
 import time
+
+
 # from numpy.linalg import inv
 
 
@@ -18,7 +20,24 @@ class SceneObject:
         :param gripper_id: SceneObject ID derived from loading object to the scene
         """
         self.object_id = object_id
-        self.pos, self.orn = p.getBasePositionAndOrientation(self.object_id)
+        self.get_curr_pose()
+        self.next_pos = None
+        self.next_orn = None
+
+    def get_curr_pose(self):
+        self.curr_pos, self.curr_orn = p.getBasePositionAndOrientation(self.object_id)
+        return self.curr_pos, self.curr_orn
+
+    def get_next_pose(self, data):
+        """
+        Get the next pose values from the file in the proper pose format
+        :param data: Data line from file as a list [x, y, rotx,  f_x,f_y,f_rot_mag]
+        :return:
+        """
+        self.next_pos = (data[1], data[0], self.curr_pos[2])
+        # orn_eul = [0, radians(data[2]), 0]
+        orn = ((0, 1, 0), radians(data[2]))
+        self.next_orn = p.getQuaternionFromAxisAngle(orn[0], orn[1])
 
 
 class Manipulator(SceneObject):
@@ -83,7 +102,7 @@ class Manipulator(SceneObject):
         Stores in self.curr_joint_angle : current joint angles as a list
         """
         self.curr_joint_poses = []
-        curr_joint_states = p.getJointStates(self.gripper_id, self.joint_dict.values())#self.joint_indices)
+        curr_joint_states = p.getJointStates(self.gripper_id, self.joint_dict.values())  # self.joint_indices)
         for joint in range(0, len(curr_joint_states)):
             # print("VALUES: {}, {}".format(joint, curr_joint_states[joint][0]))
             self.curr_joint_poses.append(curr_joint_states[joint][0])
@@ -105,33 +124,111 @@ class Manipulator(SceneObject):
                 # print("JOINTS: CURR: {} GIVEN {}:".format(curr_joint, given_joint))
                 if isclose(curr_joint, given_joint, abs_tol=abs_tol):
                     count += 1
-            if count == 4:
+            if count == len(joint_poses):
                 done = True
             else:
                 done = False
             return done
 
-    def move_fingers_to_pose(self, joint_poses):
+    def get_contact_points(self, cube_id):
+        """
+        Get the contact points between object passed in (cube) and gripper
+        If no  contact, returns None
+        :param cube_id:
+        :return: [contact_points_left, contact_points_right] left and right finger contacts
+        """
+        contact_points_info_left = p.getContactPoints(cube_id, self.gripper_id,
+                                                      linkIndexB=self.joint_dict['L_Dist'])
+        try:
+            contact_points_left = contact_points_info_left[0][5]
+        except IndexError:
+            contact_points_left = None
+
+        contact_points_info_right = p.getContactPoints(cube_id, self.gripper_id,
+                                                       linkIndexB=self.joint_dict['R_Dist'])
+        try:
+            contact_points_right = contact_points_info_right[0][5]
+        except IndexError:
+            contact_points_right = None
+        return [contact_points_left, contact_points_right]
+
+    def move_fingers_to_pose(self, joint_poses, cube_id=None):
         """
         Position manipulator with fingers open (widespread)
         :param joint_poses: joint angles to go to
-        :return: Boolean  value
+        :return: done: Boolean  value
         (True  -> action complete)
-        (False -> action incomplete/erroneous)
+        :return contact_points: list containing left and right contact points
         """
         done = False
         while p.isConnected() and not done:
             p.setJointMotorControlArray(bodyIndex=self.gripper_id, jointIndices=self.joint_indices,
-                                controlMode=p.POSITION_CONTROL, targetPositions=joint_poses)
+                                        controlMode=p.POSITION_CONTROL, targetPositions=joint_poses)
             # targetVelocities=v, forces=f)
             # Query joint angles and check if they match or are close to where we want them to be
             done = self.pose_reached(joint_poses)
             # time.sleep(1)
-        return done
+        if cube_id is not None:
+            contact_points = self.get_contact_points(cube_id)
+
+        else:
+            contact_points = [None, None]
+        return done, contact_points
+
+    def get_pose_in_world_origin(self, cube, data):
+        """
+        Gets the new contact points in world coordinates
+        :param cube: instance of object in scene class(object to move)
+        :param data: line in file of human data [x,y,rmag,f_x,f_y,f_rot_mag]
+        :return: list T_origin_newcontactpoints: next contact points in world coordinates for left and right
+        """
+        curr_contact_points = self.get_contact_points(cube.object_id)
+        # print("CURRENT CONTACT POINTS: {}".format(curr_contact_points))
+        cube.get_curr_pose()
+        # print("CURRENT CUBE POSE IS: {}, {}".format(cube.curr_pos, cube.curr_orn))
+        self.get_curr_pose()
+        # print("CURRENT GRIPPER POSE IS: {}, {}".format(self.curr_pos, self.curr_orn))
+        # print("DATAAAAAA: {}".format(data))
+        cube.get_next_pose(data)
+        # print("NEXT CUBE POSE IS: {}, {}".format(cube.next_pos, cube.next_orn))
+
+        T_origin_nextpose_cube = p.multiplyTransforms(cube.curr_pos, cube.curr_orn, cube.next_pos, cube.next_orn)
+        # print("NEW POINTS:{}".format(T_origin_nextpose_cube))
+        T_cube_origin = p.invertTransform(cube.curr_pos, cube.curr_orn)
+        T_origin_newcontactpoints = []
+        for i in range(0, len(curr_contact_points)):
+            T_cube_contact_points = p.multiplyTransforms(T_cube_origin[0], T_cube_origin[1],
+                                                         curr_contact_points[i], self.curr_orn)
+            # print("CONTACT POINTS IN CUBE TRANSFORM: {}".format(T_cube_contact_points))
+            T_newcube_newcontactpoints = p.multiplyTransforms(T_cube_contact_points[0], T_cube_contact_points[1],
+                                                              cube.next_pos, cube.next_orn)
+            # print("NEW CONTACT POINTS IN CUBE TRANSFORM: {}".format(T_newcube_newcontactpoints))
+            T_origin_newcontactpoints.append(p.multiplyTransforms(T_origin_nextpose_cube[0], T_origin_nextpose_cube[1],
+                                                             T_newcube_newcontactpoints[0], T_newcube_newcontactpoints[1]))
+        # print("NEW CONTACT POINTS IN ORIGIN: {}".format(T_origin_newcontactpoints))
+        return T_origin_newcontactpoints
 
     def manipulate_object(self, cube, data):
-        # Get Cube Pose curr and next from file
+        """
+        Once the object is held, call this function to move it along a given path
+        :param cube: ID of Object to move
+        :param data: Path points to move along
+        :return: done: True if complete, False otherwise
+        """
+        j = 0
+        for line in data:
+            print("ITERATION: {}".format(j))
+            [next_contact_pose_left, next_contact_pose_right] = self.get_pose_in_world_origin(cube, line)
+            next_contact_points = [next_contact_pose_left[0], next_contact_pose_right[0]]
+            # next_contact_points = [next_contact_pose_right[0], next_contact_pose_left[0]]
+            print("NEXT CONTACT POINTS ARE: {}".format(next_contact_points))
+            next_joint_poses = p.calculateInverseKinematics2(bodyUniqueId=self.gripper_id,
+                                                             endEffectorLinkIndices=[self.joint_dict['R_Dist'],
+                                                                                     self.joint_dict['L_Dist']],
+                                                             targetPositions=next_contact_points)
+            self.move_fingers_to_pose(next_joint_poses)
+            j += 1
+
+        # print("CURRENT CONTACT POINTS ARE: {}".format(curr_contact_points))
         # Get Contact Points btw Cube and End Effectors
         # Build matrix btw c_p and cube
-
-        pass

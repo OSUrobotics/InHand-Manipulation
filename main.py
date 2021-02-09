@@ -1,5 +1,6 @@
+#!/usr/bin/env python3
+
 import pybullet as p
-import time
 import pybullet_data
 import pandas as pd
 import numpy as np
@@ -27,7 +28,7 @@ planeId = p.loadURDF("plane.urdf")
 cubeStartPos = [0, 0, 1]
 cubeStartOrientation = p.getQuaternionFromEuler([0, 0, 0])
 gripper = p.loadSDF("ExampleSimWorld-Josh/new/testing2_try.sdf")
-print('DESCRIPTION \n', gripper, '\n END')
+print('DESCRIPTION \n', len(gripper), gripper, '\n END')
 boxId = gripper[0]
 cubeId = gripper[1]
 cubePos, cubeOrn = p.getBasePositionAndOrientation(cubeId)
@@ -61,10 +62,12 @@ endEffectorIndex2 = 4
 a = [1, 2, 3, 4]
 
 # To  set  velocity ###
-v = [50.0, 10, -10, -20]
+v_man = 0.01
+v = [v_man, v_man, v_man, v_man]
 
 # To set force ###
-f = [500, 500, 500, 500]
+f_man  = 1
+f = [f_man, f_man, f_man, f_man]
 
 # Setting position  of the sphere to track changes ###
 t_pos1 = list(cubePos)
@@ -87,10 +90,11 @@ trans_mat_start_cube = np.array([[1, 0, t_pos[0]], [0, 1, t_pos[1]], [0, 0, 1]])
 # DATA FROM HUMAN STUDIES ###
 human_data = (0.733038, -1.62316, -0.733038, 1.62316)
 
-vel = 0.01
-force = 10
+vel = 1
+force = 1
+
 vel_array = [vel, vel, vel, vel]
-force_array = [force, force, force, force]
+force_array = [0, force, 0, force]
 max_force = 0.0001
 done_start_pos = 0
 done_preman_pos = 0
@@ -157,7 +161,7 @@ for i in range(sim_steps):
         # Set start position of hand parallel to  object.
         jointPoses1 = (1.5708, 0.0, -1.5708, 0.0)
         p.setJointMotorControlArray(bodyIndex=boxId, jointIndices=a, controlMode=p.POSITION_CONTROL,
-                                    targetPositions=jointPoses1, targetVelocities=vel_array, forces=force_array)
+                                    targetPositions=jointPoses1, targetVelocities=v, forces=f)
         done_start_pos = 1
 
     # PRE-MANIPULATION POSE ###
@@ -167,25 +171,29 @@ for i in range(sim_steps):
         # Reach the  grasping position (pre-manipulation pose)
         jointPoses1 = human_data
         p.setJointMotorControlArray(bodyIndex=boxId, jointIndices=a, controlMode=p.POSITION_CONTROL,
-                                    targetPositions=jointPoses1, targetVelocities=vel_array, forces=force_array)
+                                    targetPositions=jointPoses1, targetVelocities=v, forces=f)
 
     # MOVING OBJECT IN HAND ###
     if done_preman_pos and dist < 0.003 and j < j_max:
         print("IM IN 3")
-        done_move_obj = 1
 
+        if j < 50:
+            j += 1
+            print(j)
+            continue
+        done_move_obj = 1
         # Getting the Contact information ###
-        # contact_points_info = p.getContactPoints(cubeId, boxId, linkIndexB=endEffectorIndex2)
-        # try:
-        #     contact_points = contact_points_info[0][5]
-        #     print (contact_points)
-        # except IndexError:
-        #     print("Not in contact as yet")
+        contact_points_info = p.getContactPoints(cubeId, boxId, linkIndexB=endEffectorIndex2)
+        try:
+            contact_points = contact_points_info[0][5]
+            print(contact_points)
+        except IndexError:
+            print("Not in contact as yet")
 
         x_inc = dist_val[j][1] * scale
         y_inc = dist_val[j][0] * scale
         print("POSITION VALUES:", j, x_inc, "\t", y_inc, t_pos[2])
-        rot_ang = np.radians(dist_val[j][2])
+        rot_ang = np.radians(dist_val[j][2]) #Acc for non zero  angle
         cos_ang = np.cos(rot_ang)
         sin_ang = np.sin(rot_ang)
 
@@ -195,31 +203,37 @@ for i in range(sim_steps):
         trans_mat_start_cube[1][0] = sin_ang
         trans_mat_start_cube[1][1] = cos_ang
         trans_mat_start_cube[1][2] = t_pos1[1] + y_inc
-        print("TRANSFORMED\n",trans_mat_start_cube)
-        print("RIGHT\n", cont_cube_mat, "\nLEFT\n", cont_cube_mat_l)
+
         t_pos_r = np.matmul(trans_mat_start_cube, cont_cube_mat)
         t_pos_l = np.matmul(trans_mat_start_cube, cont_cube_mat_l)
-        print ("RIGHT\n", t_pos_r, "\nLEFT\n",  t_pos_l)
-        # sphereID3 = p.createVisualShape(shapeType=p.GEOM_SPHERE, radius=0.005, rgbaColor=[1, 0, 0, 1])
-        # p.createMultiBody(baseVisualShapeIndex=sphereID3, basePosition=[t_pos_r[0][0], t_pos_r[1][0], 0.17],
-        #                   baseOrientation=cubeStartOrientation)
-        #
-        # sphereID4 = p.createVisualShape(shapeType=p.GEOM_SPHERE, radius=0.005, rgbaColor=[0, 1, 0, 1])
-        # p.createMultiBody(baseVisualShapeIndex=sphereID4, basePosition=[t_pos_l[0][0], t_pos_l[1][0], 0.17],
-        #                   baseOrientation=cubeStartOrientation)
+        t_pos_r[2] = 0.042152355722620966
+        t_pos_l[2] = 0.03833692008055983
+        move_pos = [trans_mat_start_cube[0][2], trans_mat_start_cube[1][2], 0.15]
+        print("IT ISSSS", t_pos_l, t_pos_r)
+        sphereID3 = p.createVisualShape(shapeType=p.GEOM_SPHERE, radius=0.005, rgbaColor=[1, 0, 0, 1])
+        p.createMultiBody(baseVisualShapeIndex=sphereID3, basePosition=[t_pos_r[0][0], t_pos_r[1][0], 0.17],
+                          baseOrientation=cubeStartOrientation)
+
+        sphereID4 = p.createVisualShape(shapeType=p.GEOM_SPHERE, radius=0.005, rgbaColor=[0, 1, 0, 1])
+        p.createMultiBody(baseVisualShapeIndex=sphereID4, basePosition=[t_pos_l[0][0], t_pos_l[1][0], 0.17],
+                          baseOrientation=cubeStartOrientation)
+
+        sphereID5 = p.createVisualShape(shapeType=p.GEOM_SPHERE, radius=0.005, rgbaColor=[0, 0, 1, 1])
+        p.createMultiBody(baseVisualShapeIndex=sphereID5, basePosition=move_pos,
+                          baseOrientation=cubeStartOrientation)
 
         j += 1
         jointPoses1 = p.calculateInverseKinematics2(bodyUniqueId=boxId,
                                                     endEffectorLinkIndices=[endEffectorIndex1, endEffectorIndex2],
                                                     targetPositions=[t_pos_r, t_pos_l])
         p.setJointMotorControlArray(bodyIndex=boxId, jointIndices=a, controlMode=p.POSITION_CONTROL,
-                                    targetPositions=jointPoses1)  # , targetVelocities=vel_array, forces = force_array)
+                                    targetPositions=jointPoses1)#, targetVelocities=vel_array, forces = force_array)
 
     if (j >= j_max or dist > 0.003) and done_move_obj:
-        sphereID1 = p.createVisualShape(shapeType=p.GEOM_SPHERE, radius=0.005, rgbaColor=[1, 0, 0, 1])
-        p.createMultiBody(baseVisualShapeIndex=sphereID1, basePosition=t_pos_l, baseOrientation=cubeStartOrientation)
-        sphereID2 = p.createVisualShape(shapeType=p.GEOM_SPHERE, radius=0.005, rgbaColor=[1, 0, 0, 1])
-        p.createMultiBody(baseVisualShapeIndex=sphereID2, basePosition=t_pos_r, baseOrientation=cubeStartOrientation)
+        # sphereID1 = p.createVisualShape(shapeType=p.GEOM_SPHERE, radius=0.005, rgbaColor=[1, 0, 0, 1])
+        # p.createMultiBody(baseVisualShapeIndex=sphereID1, basePosition=t_pos_l, baseOrientation=cubeStartOrientation)
+        # sphereID2 = p.createVisualShape(shapeType=p.GEOM_SPHERE, radius=0.005, rgbaColor=[1, 0, 0, 1])
+        # p.createMultiBody(baseVisualShapeIndex=sphereID2, basePosition=t_pos_r, baseOrientation=cubeStartOrientation)
         time.sleep(2)
         print("BREAK",  dist, j)
         break

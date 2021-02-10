@@ -154,10 +154,12 @@ class Manipulator(SceneObject):
             contact_points_right = None
         return [contact_points_left, contact_points_right]
 
-    def move_fingers_to_pose(self, joint_poses, cube_id=None):
+    def move_fingers_to_pose(self, joint_poses, cube_id=None, abs_tol=1e-05):
         """
         Position manipulator with fingers open (widespread)
         :param joint_poses: joint angles to go to
+        :param cube_id: If we want contact points between cube and gripper
+        :param abs_tol: Absolute tolerance between pose reached and given pose
         :return: done: Boolean  value
         (True  -> action complete)
         :return contact_points: list containing left and right contact points
@@ -170,7 +172,7 @@ class Manipulator(SceneObject):
                                         controlMode=p.POSITION_CONTROL, targetPositions=joint_poses)
             # targetVelocities=v, forces=f)
             # Query joint angles and check if they match or are close to where we want them to be
-            done = self.pose_reached(joint_poses)
+            done = self.pose_reached(joint_poses, abs_tol)
             # time.sleep(1)
         if cube_id is not None:
             contact_points = self.get_contact_points(cube_id)
@@ -228,11 +230,11 @@ class Manipulator(SceneObject):
             [next_contact_pose_left, next_contact_pose_right] = self.get_pose_in_world_origin(cube, line)
             next_contact_points = [next_contact_pose_left[0], next_contact_pose_right[0]]
             print("NEXT CONTACT POINTS ARE: {}".format(next_contact_points))
-            # next_joint_poses = p.calculateInverseKinematics2(bodyUniqueId=self.gripper_id,
-            #                                                  endEffectorLinkIndices=[self.joint_dict['R_Dist'],
-            #                                                                          self.joint_dict['L_Dist']],
-            #                                                  targetPositions=next_contact_points)
-            # self.move_fingers_to_pose(next_joint_poses)
+            next_joint_poses = p.calculateInverseKinematics2(bodyUniqueId=self.gripper_id,
+                                                             endEffectorLinkIndices=[self.joint_dict['L_Dist'],
+                                                                                     self.joint_dict['R_Dist']],
+                                                             targetPositions=next_contact_points)
+            self.move_fingers_to_pose(next_joint_poses, abs_tol=1e-0)
 
             marker_pose_left_pos = list(next_contact_pose_left[0])
             marker_pose_left_orn = list(next_contact_pose_left[1])

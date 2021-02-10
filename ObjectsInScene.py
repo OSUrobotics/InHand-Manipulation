@@ -37,8 +37,9 @@ class SceneObject:
         :return:
         """
         self.next_pos = (data[1]*scale, data[0]*scale, self.curr_pos[2])
-        # orn_eul = [0, radians(data[2]), 0]
-        orn = ((0, 1, 0), radians(data[2]))
+        # orn_eul = [0, 0, radians(data[2])]
+        # self.next_orn = p.getQuaternionFromEuler(orn_eul)
+        orn = ((1, 0, 0), radians(data[2]))
         self.next_orn = p.getQuaternionFromAxisAngle(orn[0], orn[1])
 
 
@@ -165,6 +166,12 @@ class Manipulator(SceneObject):
         :return contact_points: list containing left and right contact points
         """
         done = False
+        original_distal_left = Markers.Marker()
+        left_link = p.getLinkState(self.gripper_id, self.joint_dict['L_Dist'])
+        distal_left_pos = left_link[4]
+        distal_left_orn = left_link[5]
+        # original_distal_left.set_marker_pose((distal_left_pos, distal_left_orn))
+
         while p.isConnected() and not done:
             p.stepSimulation()
             time.sleep(1. / 240.)
@@ -198,21 +205,34 @@ class Manipulator(SceneObject):
         cube.get_next_pose(data)
         # print("NEXT CUBE POSE IS: {}, {}".format(cube.next_pos, cube.next_orn))
 
-        T_origin_nextpose_cube = p.multiplyTransforms(cube.curr_pos, cube.curr_orn, cube.next_pos, cube.next_orn)
-        # print("NEW POINTS:{}".format(T_origin_nextpose_cube))
+        steady_orn = p.getQuaternionFromEuler([0,0,0])
+        T_origin_nextpose_cube = p.multiplyTransforms(cube.curr_pos, cube.curr_orn, cube.next_pos, steady_orn)
+        # T_origin_nextpose_cube = (T_origin_nextpose_cube_tuple[0], cube.next_orn)
+        # print("NEW POINTS:{} \n {}".format(T_origin_nextpose_cube, T_origin_nextpose_cube_tuple))
         T_cube_origin = p.invertTransform(cube.curr_pos, cube.curr_orn)
         T_origin_newcontactpoints = []
+        T_origin_newlink = []
+        j = self.joint_dict['L_Dist']
         for i in range(0, len(curr_contact_points)):
             T_cube_contact_points = p.multiplyTransforms(T_cube_origin[0], T_cube_origin[1],
                                                          curr_contact_points[i], self.curr_orn)
-            # print("CONTACT POINTS IN CUBE TRANSFORM: {}".format(T_cube_contact_points))
+            print("CONTACT POINTS IN CUBE TRANSFORM: {}".format(T_cube_contact_points))
             T_newcube_newcontactpoints = p.multiplyTransforms(T_cube_contact_points[0], T_cube_contact_points[1],
                                                               cube.next_pos, cube.next_orn)
-            # print("NEW CONTACT POINTS IN CUBE TRANSFORM: {}".format(T_newcube_newcontactpoints))
+            print("NEW CONTACT POINTS IN CUBE TRANSFORM: {}".format(T_newcube_newcontactpoints))
             T_origin_newcontactpoints.append(p.multiplyTransforms(T_origin_nextpose_cube[0], T_origin_nextpose_cube[1],
                                                              T_newcube_newcontactpoints[0], T_newcube_newcontactpoints[1]))
         # print("NEW CONTACT POINTS IN ORIGIN: {}".format(T_origin_newcontactpoints))
-        return T_origin_newcontactpoints
+            T_cp_origin = p.invertTransform(curr_contact_points[i], self.curr_orn)
+            left_link = p.getLinkState(self.gripper_id, j)
+            distal_left_pos = left_link[4]
+            distal_left_orn = left_link[5]
+            T_cp_link = p.multiplyTransforms(T_cp_origin[0], T_cp_origin[1], distal_left_pos, distal_left_orn)
+            T_origin_newlink.append(p.multiplyTransforms(T_origin_newcontactpoints[i][0], T_origin_newcontactpoints[i][1],
+                                                    T_cp_link[0], T_cp_link[1]))
+            j += 2
+
+        return T_origin_newcontactpoints, T_origin_newlink, T_origin_nextpose_cube
 
     def manipulate_object(self, cube, data):
         """
@@ -222,28 +242,57 @@ class Manipulator(SceneObject):
         :param data: Path points to move along
         :return: done: True if complete, False otherwise
         """
-        marker_left = Markers.Marker()
-        marker_right = Markers.Marker(color=[0,1,0,1])
+        marker_left_link = Markers.Marker()
+        marker_right_link = Markers.Marker()
+        marker_left_cp = Markers.Marker(color=[0,1,0,1])
+        marker_right_cp = Markers.Marker(color=[0,1,0,1])
+        marker_cube = Markers.Marker(color=[0,0,1,1])
+        marker_human_data = Markers.Marker(color=[1,1,0,1])
         j = 0
         for line in data:
+            # if j == 1:
+            #     break
             print("ITERATION: {}".format(j))
-            [next_contact_pose_left, next_contact_pose_right] = self.get_pose_in_world_origin(cube, line)
-            next_contact_points = [next_contact_pose_left[0], next_contact_pose_right[0]]
-            print("NEXT CONTACT POINTS ARE: {}".format(next_contact_points))
+            if j < 65:
+                j += 1
+                continue
+            [next_contact_pose_left, next_contact_pose_right], [next_link_pose_left, next_link_pose_right], next_cube_pose = self.get_pose_in_world_origin(cube, line)
+            # next_contact_points = [next_contact_pose_left[0], next_contact_pose_right[0]]
+            next_link_pose = [next_link_pose_left[0], next_link_pose_right[0]]
+            # print("NEXT CONTACT POINTS ARE: {}".format(next_contact_points))
             next_joint_poses = p.calculateInverseKinematics2(bodyUniqueId=self.gripper_id,
                                                              endEffectorLinkIndices=[self.joint_dict['L_Dist'],
                                                                                      self.joint_dict['R_Dist']],
-                                                             targetPositions=next_contact_points)
+                                                             targetPositions=next_link_pose)
             self.move_fingers_to_pose(next_joint_poses, abs_tol=1e-0)
+
+            marker_pose_left_pos = list(next_link_pose_left[0])
+            marker_pose_left_orn = list(next_link_pose_left[1])
+            marker_pose_left_pos[2] = 0.06
+            marker_pose_right_pos = list(next_link_pose_right[0])
+            marker_pose_right_orn = list(next_link_pose_right[1])
+            marker_pose_right_pos[2] = 0.06
+            marker_left_link.set_marker_pose((marker_pose_left_pos, marker_pose_left_orn))
+            marker_right_link.set_marker_pose((marker_pose_right_pos, marker_pose_right_orn))
 
             marker_pose_left_pos = list(next_contact_pose_left[0])
             marker_pose_left_orn = list(next_contact_pose_left[1])
-            marker_pose_left_pos[2] = 0.17
+            marker_pose_left_pos[2] = 0.08
             marker_pose_right_pos = list(next_contact_pose_right[0])
             marker_pose_right_orn = list(next_contact_pose_right[1])
-            marker_pose_right_pos[2] = 0.17
-            marker_left.set_marker_pose((marker_pose_left_pos, marker_pose_left_orn))
-            marker_right.set_marker_pose((marker_pose_right_pos, marker_pose_right_orn))
+            marker_pose_right_pos[2] = 0.08
+            marker_left_cp.set_marker_pose((marker_pose_left_pos, marker_pose_left_orn))
+            marker_right_cp.set_marker_pose((marker_pose_right_pos, marker_pose_right_orn))
+
+            marker_cube_pos = list(next_cube_pose[0])
+            marker_cube_orn = list(next_cube_pose[1])
+            marker_cube_pos[2] = 0.08
+            marker_cube.set_marker_pose((marker_cube_pos, marker_cube_orn))
+
+            marker_next_pose = list(cube.next_pos)
+            marker_next_pose[2] = 0.08
+            marker_human_data.set_marker_pose((marker_next_pose, cube.next_orn))
+
             j += 1
 
         # print("CURRENT CONTACT POINTS ARE: {}".format(curr_contact_points))

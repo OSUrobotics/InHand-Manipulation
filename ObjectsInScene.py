@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
+
 import pybullet as p
 # import setup
 import numpy as np
 from math import isclose, radians
-import time
+import Markers
 
 
 # from numpy.linalg import inv
@@ -215,6 +216,8 @@ class Manipulator(SceneObject):
         :param data: Path points to move along
         :return: done: True if complete, False otherwise
         """
+        marker_left = Markers.Marker()
+        marker_right = Markers.Marker()
         j = 0
         for line in data:
             print("ITERATION: {}".format(j))
@@ -222,6 +225,7 @@ class Manipulator(SceneObject):
             next_contact_points = [next_contact_pose_left[0], next_contact_pose_right[0]]
             # next_contact_points = [next_contact_pose_right[0], next_contact_pose_left[0]]
             print("NEXT CONTACT POINTS ARE: {}".format(next_contact_points))
+            # marker_left.set_marker_pose(next_contact_pose_left[0])
             next_joint_poses = p.calculateInverseKinematics2(bodyUniqueId=self.gripper_id,
                                                              endEffectorLinkIndices=[self.joint_dict['R_Dist'],
                                                                                      self.joint_dict['L_Dist']],

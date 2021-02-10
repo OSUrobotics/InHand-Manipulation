@@ -8,12 +8,13 @@ class Marker:
     A Visualization tool to help find particular points in the simulation
     """
 
-    def __init__(self, shape=p.GEOM_SPHERE):
+    def __init__(self, shape=p.GEOM_SPHERE, color=[1,0,0,1]):
         """
         Initialising a marker with a shape
-        :param shape: Shape of visual object being vreated
+        :param shape: Shape of visual object being created
+        :param color: Color of the marker
         """
-        self.ID = p.createVisualShape(shapeType=shape)
+        self.ID = p.createVisualShape(shapeType=shape, radius=0.005, rgbaColor=color)
 
     def set_marker_pose(self, pose):
         """

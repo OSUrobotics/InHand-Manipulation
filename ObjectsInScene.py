@@ -5,6 +5,7 @@ import pybullet as p
 import numpy as np
 from math import isclose, radians
 import Markers
+import time
 
 
 # from numpy.linalg import inv
@@ -29,13 +30,13 @@ class SceneObject:
         self.curr_pos, self.curr_orn = p.getBasePositionAndOrientation(self.object_id)
         return self.curr_pos, self.curr_orn
 
-    def get_next_pose(self, data):
+    def get_next_pose(self, data, scale=0.1):
         """
         Get the next pose values from the file in the proper pose format
         :param data: Data line from file as a list [x, y, rotx,  f_x,f_y,f_rot_mag]
         :return:
         """
-        self.next_pos = (data[1], data[0], self.curr_pos[2])
+        self.next_pos = (data[1]*scale, data[0]*scale, self.curr_pos[2])
         # orn_eul = [0, radians(data[2]), 0]
         orn = ((0, 1, 0), radians(data[2]))
         self.next_orn = p.getQuaternionFromAxisAngle(orn[0], orn[1])
@@ -163,6 +164,8 @@ class Manipulator(SceneObject):
         """
         done = False
         while p.isConnected() and not done:
+            p.stepSimulation()
+            time.sleep(1. / 240.)
             p.setJointMotorControlArray(bodyIndex=self.gripper_id, jointIndices=self.joint_indices,
                                         controlMode=p.POSITION_CONTROL, targetPositions=joint_poses)
             # targetVelocities=v, forces=f)
@@ -211,26 +214,34 @@ class Manipulator(SceneObject):
 
     def manipulate_object(self, cube, data):
         """
+        TODO: Dictionary keys should (maybe?) be a parameter?
         Once the object is held, call this function to move it along a given path
         :param cube: ID of Object to move
         :param data: Path points to move along
         :return: done: True if complete, False otherwise
         """
         marker_left = Markers.Marker()
-        marker_right = Markers.Marker()
+        marker_right = Markers.Marker(color=[0,1,0,1])
         j = 0
         for line in data:
             print("ITERATION: {}".format(j))
             [next_contact_pose_left, next_contact_pose_right] = self.get_pose_in_world_origin(cube, line)
             next_contact_points = [next_contact_pose_left[0], next_contact_pose_right[0]]
-            # next_contact_points = [next_contact_pose_right[0], next_contact_pose_left[0]]
             print("NEXT CONTACT POINTS ARE: {}".format(next_contact_points))
-            # marker_left.set_marker_pose(next_contact_pose_left[0])
-            next_joint_poses = p.calculateInverseKinematics2(bodyUniqueId=self.gripper_id,
-                                                             endEffectorLinkIndices=[self.joint_dict['R_Dist'],
-                                                                                     self.joint_dict['L_Dist']],
-                                                             targetPositions=next_contact_points)
-            self.move_fingers_to_pose(next_joint_poses)
+            # next_joint_poses = p.calculateInverseKinematics2(bodyUniqueId=self.gripper_id,
+            #                                                  endEffectorLinkIndices=[self.joint_dict['R_Dist'],
+            #                                                                          self.joint_dict['L_Dist']],
+            #                                                  targetPositions=next_contact_points)
+            # self.move_fingers_to_pose(next_joint_poses)
+
+            marker_pose_left_pos = list(next_contact_pose_left[0])
+            marker_pose_left_orn = list(next_contact_pose_left[1])
+            marker_pose_left_pos[2] = 0.17
+            marker_pose_right_pos = list(next_contact_pose_right[0])
+            marker_pose_right_orn = list(next_contact_pose_right[1])
+            marker_pose_right_pos[2] = 0.17
+            marker_left.set_marker_pose((marker_pose_left_pos, marker_pose_left_orn))
+            marker_right.set_marker_pose((marker_pose_right_pos, marker_pose_right_orn))
             j += 1
 
         # print("CURRENT CONTACT POINTS ARE: {}".format(curr_contact_points))

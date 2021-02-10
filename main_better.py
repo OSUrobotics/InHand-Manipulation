@@ -5,26 +5,23 @@ import pybullet as p
 import time
 
 if __name__ == "__main__":
+    # Initial arguments and setup
     path_to_human_data = 'Human Study Data/anjali_data_better/filt_josh_2v2_c_none_1.csv'
     human_data = setup.read_file(path_to_human_data)
     camera_view = "TOP"
     open_fingers_pose = (1.5708, 0.0, -1.5708, 0.0)
     start_grasp_pos = (0.7, -1.62316, -0.7, 1.62316)
-    # start_grasp_pos = (0.733038, -1.62316, -0.733038, 1.62316) #From human data, measured by eye
     joint_names = ['Base', 'L_Prox', 'L_Dist', 'R_Prox', 'R_Dist']
     path_to_gripper_sdf = 'ExampleSimWorld-Josh/new/testing2_try.sdf'
     (physicsClient, planeID, num_objects, gripperID, objectIDs) = setup.init_sim(path_to_gripper_sdf)
-    p.setRealTimeSimulation(True)
+    p.setRealTimeSimulation(False)
     objectID = objectIDs[0]
     print(human_data.shape)
-    print("ALL IDS:{}".format((physicsClient, planeID, num_objects, gripperID, objectID)))
     setup.set_camera_view(camera_view)
     gripper = ObjectsInScene.Manipulator(gripperID, open_fingers_pose, start_grasp_pos, joint_names)
-    print("Position is: {}, Orientation is: {}".format(gripper.curr_pos, gripper.curr_orn))
     cube = ObjectsInScene.SceneObject(objectID)
-    print("Position is: {}, Orientation is: {}".format(cube.curr_pos, cube.curr_orn))
-    print("JOINTINFO of Manip: {}".format(gripper.get_joints_info()))
 
+    #Moving code
     done_open, _ = gripper.move_fingers_to_pose(gripper.open_fingers_pose)
     print("Complete Open? {}".format(done_open))
 

@@ -3,7 +3,7 @@
 import pybullet as p
 import pybullet_data
 import pandas as pd
-
+import sys
 
 def read_file(filename):
     """
@@ -78,3 +78,12 @@ def set_camera_view(view="TOP"):
     else:
         print("Not a valid input")
         raise ValueError
+
+
+def quit_sim():
+    """
+    disconnect the sim
+    TODO: Is this   the best way for a clean exit?
+    """
+    p.disconnect()
+    sys.exit()

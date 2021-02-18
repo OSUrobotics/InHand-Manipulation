@@ -55,7 +55,7 @@ class Manipulator(SceneObject):
             self.joint_dict_with_base.update({self.joint_info[i][1]: self.joint_info[i][0]})
             self.key_names_list.append(self.joint_info[i][1])
             self.key_names_list_with_base.append(self.joint_info[i][1])
-            if i%2 == 0:
+            if 'dist' in str(self.joint_info[i][1]):
                 self.end_effector_indices.append(i)
 
         # print("DICTIONARY CREATED:{}".format(self.joint_dict))
@@ -132,16 +132,19 @@ class Manipulator(SceneObject):
         tot_attempts = 20
         in_contact = False
         for i in range(0, tot_attempts):
+            target_pos =  []
             p.stepSimulation()
             time.sleep(1. / 240.)
             contact_points = self.get_contact_points(cube.object_id)
             if None in contact_points:
                 # maintain contact
                 go_to = cube.get_curr_pose()[0]
+                for j in range(0, len(self.end_effector_indices)):
+                    target_pos.append(go_to)
                 print("Attempting to make contact")
                 pose_for_contact = p.calculateInverseKinematics2(bodyUniqueId=self.gripper_id,
                                                                  endEffectorLinkIndices=self.end_effector_indices,
-                                                                 targetPositions=[go_to, go_to])
+                                                                 targetPositions=target_pos)
                 p.setJointMotorControlArray(bodyIndex=self.gripper_id, jointIndices=self.joint_indices,
                                             controlMode=p.POSITION_CONTROL, targetPositions=pose_for_contact)
 
@@ -212,7 +215,7 @@ class Manipulator(SceneObject):
 
         return T_origin_new_cp
 
-    def get_origin_links(self, i, j, T_origin_newcontactpoints,  curr_contact_points):
+    def get_origin_links(self, i, j, T_origin_newcontactpoints_pos, T_origin_newcontactpoints_orn, curr_contact_points):
         """
 
         :param i:
@@ -220,11 +223,11 @@ class Manipulator(SceneObject):
         :return:
         """
         T_cp_origin = p.invertTransform(curr_contact_points[i], self.curr_orn)
-        left_link = p.getLinkState(self.gripper_id, j)
-        distal_left_pos = left_link[4]
-        distal_left_orn = left_link[5]
-        T_cp_link = p.multiplyTransforms(T_cp_origin[0], T_cp_origin[1], distal_left_pos, distal_left_orn)
-        T_origin_nl = p.multiplyTransforms(T_origin_newcontactpoints[i][0], T_origin_newcontactpoints[i][1],
+        link = p.getLinkState(self.gripper_id, j)
+        distal_pos = link[4]
+        distal_orn = link[5]
+        T_cp_link = p.multiplyTransforms(T_cp_origin[0], T_cp_origin[1], distal_pos, distal_orn)
+        T_origin_nl = p.multiplyTransforms(T_origin_newcontactpoints_pos[i], T_origin_newcontactpoints_orn[i],
                                            T_cp_link[0], T_cp_link[1])
 
         return T_origin_nl
@@ -241,30 +244,30 @@ class Manipulator(SceneObject):
         curr_contact_points = self.get_contact_points(cube.object_id)
         self.get_curr_pose()
         T_cube_origin = p.invertTransform(cube.curr_pos, cube.curr_orn)
-        T_origin_newcontactpoints = []
-        T_origin_newlink = []
+        T_origin_new_cp_pos = []
+        T_origin_new_cp_orn = []
+        T_origin_new_link_pos = []
+        T_origin_new_link_orn = []
         for i in range(0, len(self.end_effector_indices)):
             T_origin_new_cp = self.get_origin_cp(i, cube, T_cube_origin, T_origin_nextpose_cube, curr_contact_points)
-            T_origin_newcontactpoints.append(T_origin_new_cp)
-            T_origin_nl = self.get_origin_links(i, self.end_effector_indices[i], T_origin_newcontactpoints, curr_contact_points)
-            T_origin_newlink.append(T_origin_nl)
-        return T_origin_newcontactpoints, T_origin_newlink, T_origin_nextpose_cube
+            T_origin_new_cp_pos.append(T_origin_new_cp[0])
+            T_origin_new_cp_orn.append(T_origin_new_cp[1])
+            T_origin_nl = self.get_origin_links(i, self.end_effector_indices[i], T_origin_new_cp_pos,
+                                                T_origin_new_cp_orn, curr_contact_points)
+            T_origin_new_link_pos.append(T_origin_nl[0])
+            T_origin_new_link_orn.append(T_origin_nl[1])
+
+        return [T_origin_new_cp_pos, T_origin_new_cp_orn, T_origin_new_link_pos, T_origin_new_link_orn, \
+               T_origin_nextpose_cube]
 
     def manipulate_object(self, cube, data, contact_check=False):
         """
-        TODO: Dictionary keys should (maybe?) be a parameter?
         Once the object is held, call this function to move it along a given path
         :param cube: ID of Object to move
         :param data: Path points to move along
         :param contact_check: True if you want  to maintain contact with object
         :return: done: True if complete, False otherwise
         """
-        marker_link_left = Markers.Marker(color=[1, 0, 0])
-        marker_link_right = Markers.Marker(color=[1, 0, 0])
-        marker_cp_left = Markers.Marker(color=[0, 1, 0], height=0.12)
-        marker_cp_right = Markers.Marker(color=[0, 1, 0], height=0.12)
-        marker_cube = Markers.Marker(color=[0,0,1], height=0.12)
-
         j = 0
         for line in data:
             print("ITERATION: {}".format(j))
@@ -277,26 +280,18 @@ class Manipulator(SceneObject):
                 except EnvironmentError:
                     print("We Have Lost Contact with Object. Aborting Mission")
                     setup.quit_sim()
-
-            [next_contact_pose_left, next_contact_pose_right], [next_link_pose_left, next_link_pose_right], \
-            next_cube_pose = self.get_pose_in_world_origin(cube, line)
-            next_contact_points = [next_contact_pose_left[0], next_contact_pose_right[0]]
-            next_link_pose = [next_link_pose_left[0], next_link_pose_right[0]]
+            next_info = self.get_pose_in_world_origin(cube, line)
             next_joint_poses = p.calculateInverseKinematics2(bodyUniqueId=self.gripper_id,
                                                              endEffectorLinkIndices=self.end_effector_indices,
-                                                             targetPositions=next_link_pose)
+                                                             targetPositions=next_info[2])
             self.move_fingers_to_pose(next_joint_poses, cube, abs_tol=1e-0,
                                       contact_check=False)
-
-            # marker_link_left.set_marker_pose(next_link_pose[0])
-            # marker_link_right.set_marker_pose(next_link_pose[1])
-            #
-            # marker_cp_left.set_marker_pose(next_contact_points[0])
-            # marker_cp_right.set_marker_pose(next_contact_points[1])
-            #
-            # marker_cube.set_marker_pose(next_cube_pose[0])
-
             j += 1
+
+            # # To set Marker pose -> something like this
+            # for i in range(0, len(next_info)):
+            #     for pos in next_info[i]:
+            #         Markers.Marker(color=[1, 0, 0]).set_marker_pose(pos)
 
 
 if __name__ == "__main__":

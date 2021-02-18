@@ -26,12 +26,17 @@ class Manipulator(SceneObject):
         self.joint_indices = np.arange(1, self.num_joints)
         self.open_fingers_pose = open_fingers_pose
         self.start_grasp_pose = start_grasp_pos
+        self.joint_dict = {}
+        self.joint_dict_with_base = {}
         self.key_names_list = []
+        self.key_names_list_with_base = []
+        self.end_effector_indices = []
         self.create_joint_dict(key_names)
 
     # def __repr__(self):
     #     return "This Gripper has {} joints called {}".format(self.num_joints, self.joint_dict_with_base.keys())
 
+    # noinspection DuplicatedCode
     def create_joint_dict(self, keys):
         """
         Create a dictionary for easy referencing of joints
@@ -39,28 +44,25 @@ class Manipulator(SceneObject):
         Note: 0 index is reserved for Base of the manipulator. Expected key for this is always 'Base'
         :return:
         """
-        self.joint_dict = {}
-        self.joint_dict_with_base = {}
-        self.get_joints_info()
-        if keys is not None:
-            for key, value in zip(keys, self.joint_info):
-                if key == 'Base':
-                    self.joint_dict_with_base.update({key: value[0]})
-                    self.key_names_list.append(key)
-                    continue
-                self.joint_dict.update({key: value[0]})
-                self.joint_dict_with_base.update({key: value[0]})
-                # print ("KEY AND VALUE: {}, {}". format(key, value[0]))
-        else:
-            for i in range(0, len(self.joint_info)):
 
-                if i == 0:
-                    self.joint_dict_with_base.update({self.joint_info[i][1]: self.joint_info[i][0]})
-                    continue
-                self.joint_dict.update({self.joint_info[i][1]: self.joint_info[i][0]})
+        self.get_joints_info()
+        for i in range(0, len(self.joint_info)):
+            if i == 0:
                 self.joint_dict_with_base.update({self.joint_info[i][1]: self.joint_info[i][0]})
-        print("DICTIONARY CREATED:{}".format(self.joint_dict))
-        print("DICTIONARY CREATED WITH BASE:{}".format(self.joint_dict_with_base))
+                self.key_names_list_with_base.append(self.joint_info[i][1])
+                continue
+            self.joint_dict.update({self.joint_info[i][1]: self.joint_info[i][0]})
+            self.joint_dict_with_base.update({self.joint_info[i][1]: self.joint_info[i][0]})
+            self.key_names_list.append(self.joint_info[i][1])
+            self.key_names_list_with_base.append(self.joint_info[i][1])
+            if i%2 == 0:
+                self.end_effector_indices.append(i)
+
+        # print("DICTIONARY CREATED:{}".format(self.joint_dict))
+        # print("DICTIONARY CREATED WITH BASE:{}".format(self.joint_dict_with_base))
+        # print("LIST CREATED:{}".format(self.key_names_list))
+        # print("LIST CREATED WITH BASE:{}".format(self.key_names_list))
+        # print("END EFFECTOR LIST CREATED:{}".format(self.end_effector_indices))
 
     def get_joints_info(self):
         """
@@ -77,9 +79,8 @@ class Manipulator(SceneObject):
         Stores in self.curr_joint_angle : current joint angles as a list
         """
         self.curr_joint_poses = []
-        curr_joint_states = p.getJointStates(self.gripper_id, self.joint_dict.values())  # self.joint_indices)
+        curr_joint_states = p.getJointStates(self.gripper_id, self.joint_dict.values())
         for joint in range(0, len(curr_joint_states)):
-            # print("VALUES: {}, {}".format(joint, curr_joint_states[joint][0]))
             self.curr_joint_poses.append(curr_joint_states[joint][0])
 
     def pose_reached(self, joint_poses, abs_tol=1e-05):
@@ -96,7 +97,6 @@ class Manipulator(SceneObject):
         else:
             count = 0
             for curr_joint, given_joint in zip(self.curr_joint_poses, joint_poses):
-                # print("JOINTS: CURR: {} GIVEN {}:".format(curr_joint, given_joint))
                 if isclose(curr_joint, given_joint, abs_tol=abs_tol):
                     count += 1
             if count == len(joint_poses):
@@ -112,20 +112,16 @@ class Manipulator(SceneObject):
         :param cube_id:
         :return: [contact_points_left, contact_points_right] left and right finger contacts
         """
-        contact_points_info_left = p.getContactPoints(cube_id, self.gripper_id,
-                                                      linkIndexB=self.joint_dict['L_Dist'])
-        try:
-            contact_points_left = contact_points_info_left[0][5]
-        except IndexError:
-            contact_points_left = None
+        contact_points = []
+        for i in range(0, len(self.end_effector_indices)):
+            contact_points_info = p.getContactPoints(cube_id, self.gripper_id, linkIndexB=self.end_effector_indices[i])
+            try:
+                contact_points.append(contact_points_info[0][5])
+            except IndexError:
+                contact_points.append(None)
+            pass
 
-        contact_points_info_right = p.getContactPoints(cube_id, self.gripper_id,
-                                                       linkIndexB=self.joint_dict['R_Dist'])
-        try:
-            contact_points_right = contact_points_info_right[0][5]
-        except IndexError:
-            contact_points_right = None
-        return [contact_points_left, contact_points_right]
+        return contact_points
 
     def check_for_contact(self, cube):
         """
@@ -138,14 +134,13 @@ class Manipulator(SceneObject):
         for i in range(0, tot_attempts):
             p.stepSimulation()
             time.sleep(1. / 240.)
-            [contact_points_left, contact_points_right] = self.get_contact_points(cube.object_id)
-            if contact_points_left is None or contact_points_right is None:
+            contact_points = self.get_contact_points(cube.object_id)
+            if None in contact_points:
                 # maintain contact
                 go_to = cube.get_curr_pose()[0]
                 print("Attempting to make contact")
                 pose_for_contact = p.calculateInverseKinematics2(bodyUniqueId=self.gripper_id,
-                                                                 endEffectorLinkIndices=[self.joint_dict['L_Dist'],
-                                                                                         self.joint_dict['R_Dist']],
+                                                                 endEffectorLinkIndices=self.end_effector_indices,
                                                                  targetPositions=[go_to, go_to])
                 p.setJointMotorControlArray(bodyIndex=self.gripper_id, jointIndices=self.joint_indices,
                                             controlMode=p.POSITION_CONTROL, targetPositions=pose_for_contact)
@@ -170,8 +165,6 @@ class Manipulator(SceneObject):
         while p.isConnected() and not done:
             p.stepSimulation()
             time.sleep(1. / 240.)
-
-            # targetVelocities=v, forces=f)
             # Query joint angles and check if they match or are close to where we want them to be
             done = self.pose_reached(joint_poses, abs_tol)
             if contact_check:
@@ -189,7 +182,6 @@ class Manipulator(SceneObject):
             else:
                 p.setJointMotorControlArray(bodyIndex=self.gripper_id, jointIndices=self.joint_indices,
                                             controlMode=p.POSITION_CONTROL, targetPositions=joint_poses)
-            # time.sleep(1)
         if cube is not None:
             contact_points = self.get_contact_points(cube.object_id)
 
@@ -207,14 +199,6 @@ class Manipulator(SceneObject):
         """
         cube.get_next_pose(data)
         T_origin_next_pose_cube = p.multiplyTransforms(cube.start_pos, cube.start_orn, cube.next_pos, cube.next_orn)
-        # print("Start: {} {},\n Next: {} {}, \n Next in Origin: {} ".format(cube.start_pos,
-        #                                                                    p.getEulerFromQuaternion(cube.start_orn),
-        #                                                                    cube.next_pos,
-        #                                                                    p.getEulerFromQuaternion(cube.next_orn),
-        #                                                                    T_origin_next_pose_cube[0]))
-        # marker_pose = [list(T_origin_next_pose_cube[0]), list(T_origin_next_pose_cube[1])]
-        # marker_pose[0][2] = 0.12
-        # Markers.Marker(marker_pose)
         return T_origin_next_pose_cube
 
     def get_origin_cp(self, i, cube, T_cube_origin, T_origin_nextpose_cube, curr_contact_points):
@@ -223,11 +207,8 @@ class Manipulator(SceneObject):
         :return:
         """
         T_cube_cp = p.multiplyTransforms(T_cube_origin[0], T_cube_origin[1], curr_contact_points[i], self.curr_orn)
-        T_origin_new_cp = p.multiplyTransforms(T_origin_nextpose_cube[0], T_origin_nextpose_cube[1], T_cube_cp[0], T_cube_cp[1])
-
-        # marker_pose = [list(T_origin_new_cp[0]), list(T_origin_new_cp[1])]
-        # marker_pose[0][2] = 0.12
-        # Markers.Marker(marker_pose, color=[0,1,0,1])
+        T_origin_new_cp = p.multiplyTransforms(T_origin_nextpose_cube[0], T_origin_nextpose_cube[1],
+                                               T_cube_cp[0], T_cube_cp[1])
 
         return T_origin_new_cp
 
@@ -246,10 +227,6 @@ class Manipulator(SceneObject):
         T_origin_nl = p.multiplyTransforms(T_origin_newcontactpoints[i][0], T_origin_newcontactpoints[i][1],
                                            T_cp_link[0], T_cp_link[1])
 
-        # marker_pose = [list(T_origin_nl[0]), list(T_origin_nl[1])]
-        # marker_pose[0][2] = 0.12
-        # Markers.Marker(marker_pose, color=[0,0,1,1])
-
         return T_origin_nl
 
     def get_pose_in_world_origin(self, cube, data):
@@ -266,13 +243,11 @@ class Manipulator(SceneObject):
         T_cube_origin = p.invertTransform(cube.curr_pos, cube.curr_orn)
         T_origin_newcontactpoints = []
         T_origin_newlink = []
-        j = self.joint_dict['L_Dist']
-        for i in range(0, len(curr_contact_points)):
+        for i in range(0, len(self.end_effector_indices)):
             T_origin_new_cp = self.get_origin_cp(i, cube, T_cube_origin, T_origin_nextpose_cube, curr_contact_points)
             T_origin_newcontactpoints.append(T_origin_new_cp)
-            T_origin_nl = self.get_origin_links(i, j, T_origin_newcontactpoints, curr_contact_points)
+            T_origin_nl = self.get_origin_links(i, self.end_effector_indices[i], T_origin_newcontactpoints, curr_contact_points)
             T_origin_newlink.append(T_origin_nl)
-            j += 2
         return T_origin_newcontactpoints, T_origin_newlink, T_origin_nextpose_cube
 
     def manipulate_object(self, cube, data, contact_check=False):
@@ -289,10 +264,9 @@ class Manipulator(SceneObject):
         marker_cp_left = Markers.Marker(color=[0, 1, 0], height=0.12)
         marker_cp_right = Markers.Marker(color=[0, 1, 0], height=0.12)
         marker_cube = Markers.Marker(color=[0,0,1], height=0.12)
+
         j = 0
         for line in data:
-            # if j == 1:
-            #     break
             print("ITERATION: {}".format(j))
             if j < 65:
                 j += 1
@@ -309,18 +283,17 @@ class Manipulator(SceneObject):
             next_contact_points = [next_contact_pose_left[0], next_contact_pose_right[0]]
             next_link_pose = [next_link_pose_left[0], next_link_pose_right[0]]
             next_joint_poses = p.calculateInverseKinematics2(bodyUniqueId=self.gripper_id,
-                                                             endEffectorLinkIndices=[self.joint_dict['L_Dist'],
-                                                                                     self.joint_dict['R_Dist']],
+                                                             endEffectorLinkIndices=self.end_effector_indices,
                                                              targetPositions=next_link_pose)
             self.move_fingers_to_pose(next_joint_poses, cube, abs_tol=1e-0,
                                       contact_check=False)
 
             # marker_link_left.set_marker_pose(next_link_pose[0])
             # marker_link_right.set_marker_pose(next_link_pose[1])
-
+            #
             # marker_cp_left.set_marker_pose(next_contact_points[0])
             # marker_cp_right.set_marker_pose(next_contact_points[1])
-
+            #
             # marker_cube.set_marker_pose(next_cube_pose[0])
 
             j += 1

@@ -26,6 +26,7 @@ class Manipulator(SceneObject):
         self.joint_indices = np.arange(1, self.num_joints)
         self.open_fingers_pose = open_fingers_pose
         self.start_grasp_pose = start_grasp_pos
+        self.key_names_list = []
         self.create_joint_dict(key_names)
 
     # def __repr__(self):
@@ -45,19 +46,21 @@ class Manipulator(SceneObject):
             for key, value in zip(keys, self.joint_info):
                 if key == 'Base':
                     self.joint_dict_with_base.update({key: value[0]})
+                    self.key_names_list.append(key)
                     continue
                 self.joint_dict.update({key: value[0]})
                 self.joint_dict_with_base.update({key: value[0]})
                 # print ("KEY AND VALUE: {}, {}". format(key, value[0]))
         else:
             for i in range(0, len(self.joint_info)):
+
                 if i == 0:
                     self.joint_dict_with_base.update({self.joint_info[i][1]: self.joint_info[i][0]})
                     continue
                 self.joint_dict.update({self.joint_info[i][1]: self.joint_info[i][0]})
                 self.joint_dict_with_base.update({self.joint_info[i][1]: self.joint_info[i][0]})
-        # print("DICTIONARY CREATED:{}".format(self.joint_dict))
-        # print("DICTIONARY CREATED WITH BASE:{}".format(self.joint_dict_with_base))
+        print("DICTIONARY CREATED:{}".format(self.joint_dict))
+        print("DICTIONARY CREATED WITH BASE:{}".format(self.joint_dict_with_base))
 
     def get_joints_info(self):
         """
@@ -163,11 +166,6 @@ class Manipulator(SceneObject):
         :return contact_points: list containing left and right contact points
         """
         done = False
-        # original_distal_left = Markers.Marker()
-        left_link = p.getLinkState(self.gripper_id, self.joint_dict['L_Dist'])
-        distal_left_pos = left_link[4]
-        distal_left_orn = left_link[5]
-        # original_distal_left.set_marker_pose((distal_left_pos, distal_left_orn))
 
         while p.isConnected() and not done:
             p.stepSimulation()

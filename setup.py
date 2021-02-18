@@ -83,7 +83,7 @@ def set_camera_view(view="TOP"):
 def quit_sim():
     """
     disconnect the sim
-    TODO: Is this   the best way for a clean exit?
+    TODO: Is this the best way for a clean exit?
     """
     p.disconnect()
     sys.exit()

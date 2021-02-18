@@ -6,7 +6,6 @@ import time
 import Manipulator
 import plot
 import argparse
-# import sys
 
 
 def load_from_file(filename, parser, namespace):
@@ -42,6 +41,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--file', default=None)
     args = parser.parse_args()
+    print("ARGUMENTS PASSED BEFORE: {}".format(args))
     import_arguments(args, parser)
     print("ARGUMENTS PASSED: {}".format(args))
 
@@ -50,16 +50,15 @@ if __name__ == "__main__":
     if "Yes" in args.plot_human_data:
         print("PLOT? {}".format(args.plot_human_data))
         plot.plot_human_data(human_data)
-    joint_names = ['Base', 'L_Prox', 'L_Dist', 'R_Prox', 'R_Dist']
     (physicsClient, planeID, num_objects, gripperID, objectIDs) = setup.init_sim(args.path_to_gripper_sdf)
     objectID = objectIDs[0]
     setup.set_camera_view(args.camera_view)
-    gripper = Manipulator.Manipulator(gripperID, args.open_fingers_pose, args.start_grasp_pose, joint_names)
+    gripper = Manipulator.Manipulator(gripperID, args.open_fingers_pose, args.start_grasp_pose)
     cube = ObjectsInScene.SceneObject(objectID)
 
     # Moving code
-    # done_open, _ = gripper.move_fingers_to_pose(gripper.open_fingers_pose, abs_tol=0.1)
-    # print("Complete Open? {}".format(done_open))
+    done_open, _ = gripper.move_fingers_to_pose(gripper.open_fingers_pose, abs_tol=0.1)
+    print("Complete Open? {}".format(done_open))
 
     done_grasp, contact_points = gripper.move_fingers_to_pose(gripper.start_grasp_pose, cube, abs_tol=0.05)
     print("Complete Grasp Object? {}, Contact  points: {}".format(done_grasp, contact_points))

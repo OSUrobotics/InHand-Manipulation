@@ -7,6 +7,18 @@ import numpy as np
 import time
 from numpy.linalg import inv
 
+####DEFAULT VALUES:
+"""
+    parser.add_argument("--path_to_human_data", default='Human Study Data/anjali_data_better/filt_josh_2v2_c_none_1.csv')
+    parser.add_argument("--plot_human_data", default="No")
+    parser.add_argument("--camera_view", default="TOP")
+    parser.add_argument("--path_to_gripper_sdf", default='ExampleSimWorld-Josh/new/testing2_try.sdf')
+    parser.add_argument("--open_fingers_pose", default=(0.17, 0.0, -0.17, 0.0), action='append', type=float)
+    parser.add_argument("--start_grasp_pose", default=(0.7, -1.62316, -0.7, 1.62316), action='append', type=float)
+"""
+
+
+
 
 # Read in Human data as panda data frame ###
 path_to_human_data = 'Human Study Data/anjali_data_better/filt_josh_2v2_c_none_1.csv'

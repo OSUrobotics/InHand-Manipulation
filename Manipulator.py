@@ -61,7 +61,7 @@ class Manipulator(SceneObject):
         # print("DICTIONARY CREATED:{}".format(self.joint_dict))
         # print("DICTIONARY CREATED WITH BASE:{}".format(self.joint_dict_with_base))
         # print("LIST CREATED:{}".format(self.key_names_list))
-        # print("LIST CREATED WITH BASE:{}".format(self.key_names_list))
+        print("LIST CREATED WITH BASE:{}".format(self.key_names_list_with_base))
         # print("END EFFECTOR LIST CREATED:{}".format(self.end_effector_indices))
 
     def get_joints_info(self):
@@ -129,7 +129,7 @@ class Manipulator(SceneObject):
         :param cube: cube object from objectsinscene class
         :return:
         """
-        tot_attempts = 20
+        tot_attempts = 30
         in_contact = False
         for i in range(0, tot_attempts):
             target_pos =  []

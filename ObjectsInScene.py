@@ -20,10 +20,10 @@ class SceneObject:
         :param gripper_id: SceneObject ID derived from loading object to the scene
         """
         self.object_id = object_id
-        self.get_curr_pose()
+        self.curr_pos, self.curr_orn = None, None
         self.next_pos = None
         self.next_orn = None
-        self.start_pos, self.start_orn = p.getBasePositionAndOrientation(self.object_id)
+        self.start_pos, self.start_orn = self.get_curr_pose()
 
     def get_curr_pose(self):
         self.curr_pos, self.curr_orn = p.getBasePositionAndOrientation(self.object_id)

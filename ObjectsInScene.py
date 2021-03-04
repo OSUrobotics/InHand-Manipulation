@@ -34,6 +34,7 @@ class SceneObject:
 
     def get_next_pose(self, data, scale=0.1):
         """
+        TODO: Change name to better represent what's happening here "convert_data_to_pose"?
         Get the next pose values from the file in the proper pose format
         :param data: Data line from file as a list [x, y, rotx,  f_x,f_y,f_rot_mag]
         :return:

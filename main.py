@@ -6,6 +6,9 @@ import time
 import Manipulator
 import plot
 import argparse
+import gym
+import gym_env_files
+import numpy as np
 
 
 def load_from_file(filename, parser, namespace):
@@ -38,30 +41,46 @@ if __name__ == "__main__":
     """
     Parse Arguments and start sim
     """
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--file', default=None)
-    args = parser.parse_args()
-    print("ARGUMENTS PASSED BEFORE: {}".format(args))
-    import_arguments(args, parser)
-    print("ARGUMENTS PASSED: {}".format(args))
+   #  parser = argparse.ArgumentParser()
+   #  parser.add_argument('--file', default=None)
+   #  args = parser.parse_args()
+   #  print("ARGUMENTS PASSED BEFORE: {}".format(args))
+   #  import_arguments(args, parser)
+   #  print("ARGUMENTS PASSED: {}".format(args))
+   #
+   # # Initial arguments and setup
+   #  human_data = setup.read_file(args.path_to_human_data)
+   #  if "Yes" in args.plot_human_data:
+   #      print("PLOT? {}".format(args.plot_human_data))
+   #      plot.plot_human_data(human_data)
+   #  (physicsClient, planeID, num_objects, gripperID, objectIDs) = setup.init_sim(args.path_to_gripper_sdf)
+   #  objectID = objectIDs[0]
+   #  setup.set_camera_view(args.camera_view)
+   #  gripper = Manipulator.Manipulator(gripperID, args.open_fingers_pose, args.start_grasp_pose)
+   #  cube = ObjectsInScene.SceneObject(objectID)
+   #
+   #  # Moving code
+   #  done_open, _ = gripper.move_fingers_to_pose(gripper.open_fingers_pose, abs_tol=0.1)
+   #  print("Complete Open? {}".format(done_open))
+   #
+   #  done_grasp, contact_points = gripper.move_fingers_to_pose(gripper.start_grasp_pose, cube, abs_tol=0.05)
+   #  print("Complete Grasp Object? {}, Contact  points: {}".format(done_grasp, contact_points))
+   #
+   #  done_mov_obj = gripper.manipulate_object(cube, human_data, contact_check=True)
+   #  time.sleep(2)
 
-   # Initial arguments and setup
-    human_data = setup.read_file(args.path_to_human_data)
-    if "Yes" in args.plot_human_data:
-        print("PLOT? {}".format(args.plot_human_data))
-        plot.plot_human_data(human_data)
-    (physicsClient, planeID, num_objects, gripperID, objectIDs) = setup.init_sim(args.path_to_gripper_sdf)
-    objectID = objectIDs[0]
-    setup.set_camera_view(args.camera_view)
-    gripper = Manipulator.Manipulator(gripperID, args.open_fingers_pose, args.start_grasp_pose)
-    cube = ObjectsInScene.SceneObject(objectID)
+    """
+    For importing gym env
+    """
+    env = gym.make("ihm-v0")
+    env.reset()
+    i = 0
+    action = np.array([0.17, 0.0, -0.17, 0.0])
+    while i < 2500000:
+        i += 1
+        print(i)
+        p.stepSimulation()
+        time.sleep(1. / 240.)
 
-    # Moving code
-    done_open, _ = gripper.move_fingers_to_pose(gripper.open_fingers_pose, abs_tol=0.1)
-    print("Complete Open? {}".format(done_open))
-
-    done_grasp, contact_points = gripper.move_fingers_to_pose(gripper.start_grasp_pose, cube, abs_tol=0.05)
-    print("Complete Grasp Object? {}, Contact  points: {}".format(done_grasp, contact_points))
-
-    done_mov_obj = gripper.manipulate_object(cube, human_data, contact_check=True)
-    time.sleep(2)
+        env.step(action=action)
+    env.close()

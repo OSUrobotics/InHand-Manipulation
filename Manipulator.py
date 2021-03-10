@@ -14,7 +14,7 @@ class Manipulator(SceneObject):
     Inherited from SceneObject
     """
 
-    def __init__(self, gripper_id, open_fingers_pose, start_grasp_pos):
+    def __init__(self, gripper_id, open_fingers_pose, start_grasp_pos, key_names=None):
         """
         Create a gripper object using gripper id
         :param gripper_id:
@@ -31,15 +31,16 @@ class Manipulator(SceneObject):
         self.key_names_list = []
         self.key_names_list_with_base = []
         self.end_effector_indices = []
-        self.create_joint_dict()
+        self.create_joint_dict(key_names)
 
     # def __repr__(self):
     #     return "This Gripper has {} joints called {}".format(self.num_joints, self.joint_dict_with_base.keys())
 
-    def create_joint_dict(self):
+    # noinspection DuplicatedCode
+    def create_joint_dict(self, keys):
         """
-        TODO: make this private?
         Create a dictionary for easy referencing of joints
+        :param keys: If None, uses nomenclature from urdf file, else uses nomenclature passed
         Note: 0 index is reserved for Base of the manipulator. Expected key for this is always 'Base'
         :return:
         """
@@ -57,11 +58,14 @@ class Manipulator(SceneObject):
             if 'dist' in str(self.joint_info[i][1]):
                 self.end_effector_indices.append(i)
 
+        # print("DICTIONARY CREATED:{}".format(self.joint_dict))
+        # print("DICTIONARY CREATED WITH BASE:{}".format(self.joint_dict_with_base))
+        # print("LIST CREATED:{}".format(self.key_names_list))
         print("LIST CREATED WITH BASE:{}".format(self.key_names_list_with_base))
+        # print("END EFFECTOR LIST CREATED:{}".format(self.end_effector_indices))
 
     def get_joints_info(self):
         """
-        TODO: make this private?
         Get joint info of every joint of the manipulator
         :return: list of joint info of every joint
         """
@@ -71,7 +75,6 @@ class Manipulator(SceneObject):
 
     def get_joint_angles(self):
         """
-        TODO: make this private?
         Get the current pose(angle of joints
         Stores in self.curr_joint_angle : current joint angles as a list
         """
@@ -120,9 +123,15 @@ class Manipulator(SceneObject):
 
         return contact_points
 
-    def maintain_contact(self, cube):
+    def step_sim(self, move_to_joint_poses):
+        p.stepSimulation()
+        time.sleep(1. / 240.)
+        p.setJointMotorControlArray(bodyIndex=self.gripper_id, jointIndices=self.joint_indices,
+                                    controlMode=p.POSITION_CONTROL, targetPositions=move_to_joint_poses)
+
+
+    def check_for_contact(self, cube):
         """
-        TODO: make this private?
         MAKES SURE CUBE IS IN contact with  hand
         :param cube: cube object from objectsinscene class
         :return:
@@ -131,8 +140,6 @@ class Manipulator(SceneObject):
         in_contact = False
         for i in range(0, tot_attempts):
             target_pos =  []
-            p.stepSimulation()
-            time.sleep(1. / 240.)
             contact_points = self.get_contact_points(cube.object_id)
             if None in contact_points:
                 # maintain contact
@@ -143,8 +150,7 @@ class Manipulator(SceneObject):
                 pose_for_contact = p.calculateInverseKinematics2(bodyUniqueId=self.gripper_id,
                                                                  endEffectorLinkIndices=self.end_effector_indices,
                                                                  targetPositions=target_pos)
-                p.setJointMotorControlArray(bodyIndex=self.gripper_id, jointIndices=self.joint_indices,
-                                            controlMode=p.POSITION_CONTROL, targetPositions=pose_for_contact)
+                self.step_sim(pose_for_contact)
 
             else:
                 in_contact = True
@@ -164,25 +170,22 @@ class Manipulator(SceneObject):
         done = False
 
         while p.isConnected() and not done:
-            p.stepSimulation()
-            time.sleep(1. / 240.)
             # Query joint angles and check if they match or are close to where we want them to be
             done = self.pose_reached(joint_poses, abs_tol)
             if contact_check:
                 # check for  contact
                 try:
-                    in_contact = self.maintain_contact(cube)
+                    in_contact = self.check_for_contact(cube)
                     print("IN CONTACT? {}".format(in_contact))
-                    p.setJointMotorControlArray(bodyIndex=self.gripper_id, jointIndices=self.joint_indices,
-                                                controlMode=p.POSITION_CONTROL, targetPositions=joint_poses)
+                    self.step_sim(joint_poses)
 
                 except EnvironmentError:
                     print("We Have Lost Contact with Object. Aborting Mission")
                     setup.quit_sim()
 
             else:
-                p.setJointMotorControlArray(bodyIndex=self.gripper_id, jointIndices=self.joint_indices,
-                                            controlMode=p.POSITION_CONTROL, targetPositions=joint_poses)
+                self.step_sim(joint_poses)
+
         if cube is not None:
             contact_points = self.get_contact_points(cube.object_id)
 
@@ -193,7 +196,6 @@ class Manipulator(SceneObject):
 
     def get_origin_cube(self, cube, data):
         """
-        TODO: make this private?
         Gets the next pose of the  cube in world coordinates
         :param cube:
         :param data:
@@ -205,7 +207,7 @@ class Manipulator(SceneObject):
 
     def get_origin_cp(self, i, cube, T_cube_origin, T_origin_nextpose_cube, curr_contact_points):
         """
-        TODO: make this private?
+
         :return:
         """
         T_cube_cp = p.multiplyTransforms(T_cube_origin[0], T_cube_origin[1], curr_contact_points[i], self.curr_orn)
@@ -216,7 +218,7 @@ class Manipulator(SceneObject):
 
     def get_origin_links(self, i, j, T_origin_newcontactpoints_pos, T_origin_newcontactpoints_orn, curr_contact_points):
         """
-        TODO: make this private?
+
         :param i:
         :param T_origin_newcontactpoints:
         :return:
@@ -233,7 +235,6 @@ class Manipulator(SceneObject):
 
     def get_pose_in_world_origin(self, cube, data):
         """
-        TODO: make this private?
         Gets the new contact points in world coordinates
         :param cube: instance of object in scene class(object to move)
         :param data: line in file of human data [x,y,rmag,f_x,f_y,f_rot_mag]
@@ -276,7 +277,7 @@ class Manipulator(SceneObject):
                 continue
             if contact_check:
                 try:
-                    in_contact = self.maintain_contact(cube)
+                    in_contact = self.check_for_contact(cube)
                 except EnvironmentError:
                     print("We Have Lost Contact with Object. Aborting Mission")
                     setup.quit_sim()

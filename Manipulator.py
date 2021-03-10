@@ -31,6 +31,7 @@ class Manipulator(SceneObject):
         self.key_names_list = []
         self.key_names_list_with_base = []
         self.end_effector_indices = []
+        self.prev_cp = None
         self.create_joint_dict()
 
     # def __repr__(self):
@@ -57,7 +58,11 @@ class Manipulator(SceneObject):
             if 'dist' in str(self.joint_info[i][1]):
                 self.end_effector_indices.append(i)
 
-        print("LIST CREATED WITH BASE:{}".format(self.key_names_list_with_base))
+        # print("DICTIONARY CREATED:{}".format(self.joint_dict))
+        # print("DICTIONARY CREATED WITH BASE:{}".format(self.joint_dict_with_base))
+        # print("LIST CREATED:{}".format(self.key_names_list))
+        # print("LIST CREATED WITH BASE:{}".format(self.key_names_list_with_base))
+        # print("END EFFECTOR LIST CREATED:{}".format(self.end_effector_indices))
 
     def get_joints_info(self):
         """
@@ -120,6 +125,12 @@ class Manipulator(SceneObject):
 
         return contact_points
 
+    def step_sim(self, move_to_joint_poses):
+        p.stepSimulation()
+        time.sleep(1. / 240.)
+        p.setJointMotorControlArray(bodyIndex=self.gripper_id, jointIndices=self.joint_indices,
+                                    controlMode=p.POSITION_CONTROL, targetPositions=move_to_joint_poses)
+
     def maintain_contact(self, cube):
         """
         TODO: make this private?
@@ -129,25 +140,33 @@ class Manipulator(SceneObject):
         """
         tot_attempts = 30
         in_contact = False
+        incr_left = 0.02
+        incr_right = -incr_left
         for i in range(0, tot_attempts):
-            target_pos =  []
-            p.stepSimulation()
-            time.sleep(1. / 240.)
+            target_pos = []
             contact_points = self.get_contact_points(cube.object_id)
+
             if None in contact_points:
                 # maintain contact
-                go_to = cube.get_curr_pose()[0]
-                for j in range(0, len(self.end_effector_indices)):
-                    target_pos.append(go_to)
                 print("Attempting to make contact")
+                for j in self.end_effector_indices:
+                    if 'r_dist' in str(self.joint_info[j][1]):
+                        incr = incr_right
+                    else:
+                        incr= incr_left
+                    link = p.getLinkState(self.gripper_id, j)
+                    distal_pos = (link[4][0] + incr_left, link[4][1] + incr, link[4][2])
+                    # Markers.Marker(color=[1, 0, 0]).set_marker_pose(pose=distal_pos)
+                    target_pos.append(distal_pos)
+
                 pose_for_contact = p.calculateInverseKinematics2(bodyUniqueId=self.gripper_id,
                                                                  endEffectorLinkIndices=self.end_effector_indices,
                                                                  targetPositions=target_pos)
-                p.setJointMotorControlArray(bodyIndex=self.gripper_id, jointIndices=self.joint_indices,
-                                            controlMode=p.POSITION_CONTROL, targetPositions=pose_for_contact)
+                self.step_sim(pose_for_contact)
 
             else:
                 in_contact = True
+                self.prev_cp = contact_points
                 return in_contact
         raise EnvironmentError
 
@@ -164,8 +183,6 @@ class Manipulator(SceneObject):
         done = False
 
         while p.isConnected() and not done:
-            p.stepSimulation()
-            time.sleep(1. / 240.)
             # Query joint angles and check if they match or are close to where we want them to be
             done = self.pose_reached(joint_poses, abs_tol)
             if contact_check:
@@ -173,16 +190,15 @@ class Manipulator(SceneObject):
                 try:
                     in_contact = self.maintain_contact(cube)
                     print("IN CONTACT? {}".format(in_contact))
-                    p.setJointMotorControlArray(bodyIndex=self.gripper_id, jointIndices=self.joint_indices,
-                                                controlMode=p.POSITION_CONTROL, targetPositions=joint_poses)
+                    self.step_sim(joint_poses)
 
                 except EnvironmentError:
                     print("We Have Lost Contact with Object. Aborting Mission")
                     setup.quit_sim()
 
             else:
-                p.setJointMotorControlArray(bodyIndex=self.gripper_id, jointIndices=self.joint_indices,
-                                            controlMode=p.POSITION_CONTROL, targetPositions=joint_poses)
+                self.step_sim(joint_poses)
+
         if cube is not None:
             contact_points = self.get_contact_points(cube.object_id)
 

@@ -56,7 +56,8 @@ if __name__ == "__main__":
     """
     For importing gym env
     """
-    env = gym.make("ihm-v0", kwargs=args)
+    env = gym.make("ihm-v0", kwargs={'args': args, 'state_space_type': None, 'state_space_length': 3,
+                                     'action_space_type': 'PATH'})
     env.reset()
     i = 0
     action = np.array([0.17, 0.0, -0.17, 0.0])

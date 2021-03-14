@@ -71,6 +71,7 @@ if __name__ == "__main__":
     # Moving code
     done_open, _ = gripper.move_fingers_to_pose(gripper.open_fingers_pose, abs_tol=0.1)
     print("Complete Open? {}".format(done_open))
+    p.resetBasePositionAndOrientation(objectID, cube.start_pos, cube.start_orn)
 
     done_grasp, contact_points = gripper.move_fingers_to_pose(gripper.start_grasp_pose, cube, abs_tol=0.05)
     print("Complete Grasp Object? {}, Contact  points: {}".format(done_grasp, contact_points))

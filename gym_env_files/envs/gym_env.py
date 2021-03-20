@@ -10,6 +10,7 @@ import setup
 import ObjectsInScene
 import Manipulator
 import plot
+import json
 
 
 class IHMBulletEnv(gym.Env):
@@ -17,24 +18,42 @@ class IHMBulletEnv(gym.Env):
     def __init__(self, kwargs):
         # Initial arguments and setup
         self.args = kwargs['args']
-        self.action_space_type = kwargs['action_space_type']
         self.human_data = setup.read_file(self.args.path_to_human_data)
         if "Yes" in self.args.plot_human_data:
             print("PLOT? {}".format(self.args.plot_human_data))
             plot.plot_human_data(self.human_data)
-        (self.physicsClient, self.planeID, self.num_objects, self.gripperID, self.objectIDs) = setup.init_sim(self.args.path_to_gripper_sdf)
+        (self.physicsClient, self.planeID, self.num_objects, self.gripperID, self.objectIDs) = setup.init_sim(
+            self.args.path_to_gripper_sdf)
         self.objectID = self.objectIDs[0]
         setup.set_camera_view(self.args.camera_view)
         self.gripper = Manipulator.Manipulator(self.gripperID, self.args.open_fingers_pose, self.args.start_grasp_pose)
         self.cube = ObjectsInScene.SceneObject(self.objectID)
 
         # Define  action space,  state space and reward
+        # Read from JSON file
+        with open('gym_env_files/envs/rl_spaces.json', 'r') as f:
+            rl_spaces = json.load(f)
+        print("LOOK HERE:", type(rl_spaces), rl_spaces)
+        state_space = rl_spaces['state_space']
+        obs_space = {}
+        # Define State Space
+        for key, value in state_space.items():
+            # TODO: Change this to something more meaningful than IndexError
+            try:
+                obs_space.update({key: spaces.Box(low=value[0], high=value[1], shape=(3,))})
+            except IndexError:
+                obs_space.update({key: spaces.Box(low=-np.inf, high=np.inf, shape=(value[0],))})
 
-        if kwargs['state_space_type'] is None:
-            self.observation_space = spaces.Box(np.array([0,0,0]), np.array([0,0,0]))
+        self.observation_space = spaces.Dict(obs_space)
+        print(obs_space,"\nHERE:", self.observation_space)
+        #  Define Action  Space
+        action_space = rl_spaces['action_space']
+        act_space = {}
+        for key, value in action_space.items():
+            act_space.update({key: spaces.Box(low=value[0], high=value[1], shape=(value[2],))})
 
-        if self.action_space_type == 'PATH':
-            self.action_space = spaces.Discrete(4)
+        self.action_space = spaces.Dict(act_space)
+        print("ACTION:", act_space, "\nHERE:", self.action_space)
 
     def reset(self):
         """
@@ -49,7 +68,8 @@ class IHMBulletEnv(gym.Env):
         print("Complete Open? {}".format(done_open))
 
         # Move hand to start grasp  pose
-        done_grasp, contact_points = self.gripper.move_fingers_to_pose(self.gripper.start_grasp_pose, self.cube, abs_tol=0.05)
+        done_grasp, contact_points = self.gripper.move_fingers_to_pose(self.gripper.start_grasp_pose, self.cube,
+                                                                       abs_tol=0.05)
         print("Complete Grasp Object? {}, Contact  points: {}".format(done_grasp, contact_points))
 
     def step(self, action):
@@ -64,14 +84,14 @@ class IHMBulletEnv(gym.Env):
 
         """
 
-        if self.action_space_type == 'PATH':
-            pass
+        # if self.action_space_type == 'PATH':
+        #     pass
         # Take a step
         self.gripper.step_sim(action)
         # Get reward
 
         # Get the new observation
-        return [np.array([0,0,0]), np.array([0,0,0])], 5, False, 5
+        return [np.array([0, 0, 0]), np.array([0, 0, 0])], 5, False, 5
 
     def render(self, mode='human'):
         pass

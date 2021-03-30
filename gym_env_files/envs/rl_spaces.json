@@ -1,5 +1,5 @@
 {
-  "state_space": {"joint_angles_prox":  [0.0, 180], "joint_velocities_prox":  [-5.0, 5.0], "object_pos":  [3], "object_orientation": [4]},
-  "action_space": {"joint_angles":  [0.0, 180, 4]},
-  "reward": {"reward1": [0.0, 5.0], "reward2": [-1.0, 1.0]}
+  "state_space": {"joint_angles_prox":  [0.0, 180], "joint_velocities_prox":  [-5.0, 5.0], "joint_angles_dist":  [0.0, 180], "joint_velocities_dist":  [-5.0, 5.0], "object_pos":  [3], "object_orientation": [4]},
+  "action_space": {"joint_angles":  [-1.5708, 1.5708]},
+  "reward": {"contact_reward": [-5.0, 0.0], "path_reward": [-1.0, 1.0]}
 }

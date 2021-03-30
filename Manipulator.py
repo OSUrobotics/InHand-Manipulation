@@ -19,6 +19,8 @@ class Manipulator(SceneObject):
         Create a gripper object using gripper id
         :param gripper_id:
         """
+        self.curr_joint_poses = []
+        self.curr_joint_states = []
         self.gripper_id = gripper_id
         super(Manipulator, self).__init__(self.gripper_id)
         self.joint_info = []
@@ -31,7 +33,10 @@ class Manipulator(SceneObject):
         self.key_names_list = []
         self.key_names_list_with_base = []
         self.end_effector_indices = []
+        self.prox_indices = []
         self.create_joint_dict(key_names)
+        self.next_info= None
+        self.next_joint_poses = None
 
     # def __repr__(self):
     #     return "This Gripper has {} joints called {}".format(self.num_joints, self.joint_dict_with_base.keys())
@@ -58,6 +63,11 @@ class Manipulator(SceneObject):
             if 'dist' in str(self.joint_info[i][1]):
                 self.end_effector_indices.append(i)
 
+            if 'prox' in str(self.joint_info[i][1]):
+                self.prox_indices.append(i)
+
+        print(self.prox_indices)
+
         # print("DICTIONARY CREATED:{}".format(self.joint_dict))
         # print("DICTIONARY CREATED WITH BASE:{}".format(self.joint_dict_with_base))
         # print("LIST CREATED:{}".format(self.key_names_list))
@@ -69,19 +79,20 @@ class Manipulator(SceneObject):
         Get joint info of every joint of the manipulator
         :return: list of joint info of every joint
         """
+        self.joint_info = []
         for joint in range(self.num_joints):
             self.joint_info.append(p.getJointInfo(self.gripper_id, joint))
         return self.joint_info
 
     def get_joint_angles(self):
         """
-        Get the current pose(angle of joints
+        Get the current pose angle of joints
         Stores in self.curr_joint_angle : current joint angles as a list
         """
         self.curr_joint_poses = []
-        curr_joint_states = p.getJointStates(self.gripper_id, self.joint_dict.values())
-        for joint in range(0, len(curr_joint_states)):
-            self.curr_joint_poses.append(curr_joint_states[joint][0])
+        self.curr_joint_states = p.getJointStates(self.gripper_id, self.joint_dict.values())
+        for joint in range(0, len(self.curr_joint_states)):
+            self.curr_joint_poses.append(self.curr_joint_states[joint][0])
 
     def pose_reached(self, joint_poses, abs_tol=1e-05):
         """
@@ -294,11 +305,11 @@ class Manipulator(SceneObject):
                 except EnvironmentError:
                     print("We Have Lost Contact with Object. Aborting Mission")
                     setup.quit_sim()
-            next_info = self.get_pose_in_world_origin(cube, line)
-            next_joint_poses = p.calculateInverseKinematics2(bodyUniqueId=self.gripper_id,
+            self.next_info = self.get_pose_in_world_origin(cube, line)
+            self.next_joint_poses = p.calculateInverseKinematics2(bodyUniqueId=self.gripper_id,
                                                              endEffectorLinkIndices=self.end_effector_indices,
-                                                             targetPositions=next_info[2])
-            self.move_fingers_to_pose(next_joint_poses, cube, abs_tol=1e-0,
+                                                             targetPositions=self.next_info[2])
+            self.move_fingers_to_pose(self.next_joint_poses, cube, abs_tol=1e-0,
                                       contact_check=False)
             j += 1
 

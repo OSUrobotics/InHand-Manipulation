@@ -61,15 +61,13 @@ if __name__ == "__main__":
     env.reset()
     i = 0
     action = np.array([0.17, 0.0, -0.17, 0.0])
-    while i < 2500000:
+    while i < 100:
         i += 1
         print(i)
-        p.stepSimulation()
-        time.sleep(1. / 240.)
         if i < 50:
-            env.step(action=action)
+            env.step(action=env.action_space.sample())
         elif i == 50:
             env.reset()
         else:
-            env.close()
+            continue
     env.close()

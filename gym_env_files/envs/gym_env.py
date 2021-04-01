@@ -16,9 +16,14 @@ import json
 class IHMBulletEnv(gym.Env):
 
     def __init__(self, kwargs):
+
         # Initial arguments and setup
-        self.episode_max_steps = 66
+        self.episode_max_steps = 100
         self.episode_count = 0
+        self.min_count_for_done = 5
+        self.obs = None
+        self.prev_cube_pos = None
+        self.prev_cube_orn = None
         self.args = kwargs['args']
         self.human_data = setup.read_file(self.args.path_to_human_data)
         if "Yes" in self.args.plot_human_data:
@@ -28,17 +33,19 @@ class IHMBulletEnv(gym.Env):
             self.args.path_to_gripper_sdf)
         self.objectID = self.objectIDs[0]
         setup.set_camera_view(self.args.camera_view)
-        self.gripper = Manipulator.Manipulator(self.gripperID, self.args.open_fingers_pose, self.args.start_grasp_pose)
         self.cube = ObjectsInScene.SceneObject(self.objectID)
+        self.gripper = Manipulator.Manipulator(self.gripperID, self.args.open_fingers_pose, self.args.start_grasp_pose)
 
         # Define state space and reward
         print("JOINTS:", self.gripper.num_joints)
+
         # Read from JSON file
         with open('gym_env_files/envs/rl_spaces.json', 'r') as f:
             rl_spaces = json.load(f)
         print("LOOK HERE:", type(rl_spaces), rl_spaces)
         state_space = rl_spaces['state_space']
         self.obs_space = {}
+
         # Define State Space
         for key, value in state_space.items():
             # TODO: Change this to something more meaningful than IndexError
@@ -51,25 +58,41 @@ class IHMBulletEnv(gym.Env):
                     shape = 2
                 self.obs_space.update({key: spaces.Box(low=value[0], high=value[1], shape=(shape,))})
             except IndexError:
-                self.obs_space.update({key: spaces.Box(low=-np.inf, high=np.inf, shape=(value[0],))})
+                self.obs_space.update({key: spaces.Box(low=-np.inf, high=np.inf, shape=(int(value[0]),))})
 
         self.observation_space = spaces.Dict(self.obs_space)
         print(self.obs_space,"\nHERE:", self.observation_space)
 
         # Define Action Space
-        action_space = rl_spaces['action_space']
-        self.act_space = {}
-        for key, value in action_space.items():
-            self.act_space.update({key: spaces.Box(low=value[0], high=value[1], shape=(self.gripper.num_joints - 1,))})
+        action_space_type = list(rl_spaces['action_space'].keys())[0]
+        if action_space_type == 'joint_angles':
+            self.gripper.action_type = self.gripper.action_type_JA
+            action_space = list(rl_spaces['action_space'].values())[0]
+            self.action_space = spaces.Box(low=action_space[0], high=action_space[1],
+                                           shape=(self.gripper.num_joints - 1,))
+        elif action_space_type == 'joint_velocities':
+            self.gripper.action_type = self.gripper.action_type_JV
+            action_space = list(rl_spaces['action_space'].values())[0]
+            self.action_space = spaces.Box(low=action_space[0], high=action_space[1],
+                                           shape=(self.gripper.num_joints - 1,))
+        elif action_space_type == 'path_increments':
+            self.gripper.action_type = self.gripper.action_type_PI
+            action_space = list(rl_spaces['action_space'].values())[0]
+            self.act_space_dict = {}
+            self.act_space_dict.update({'x_y': spaces.Box(low=action_space[0], high=action_space[1], shape=(3,))})
+            self.act_space_dict.update({'deg_orn': spaces.Box(low=action_space[2], high=action_space[3], shape=(4,))})
+            self.action_space = spaces.Dict(self.act_space_dict)
 
-        self.action_space = spaces.Dict(self.act_space)
-        print("ACTION:", self.act_space, "\nHERE:", self.action_space)
+        else:
+            print("Invalid action type")
+            raise KeyError
+        print("ACTION:", self.action_space, "ACTION TYPE:", action_space_type, "DICT:", rl_spaces['action_space'])
 
         # Define rewards
         self.rewards = rl_spaces['reward']
 
         # Get full Spaces
-        with open('gym_env_files/envs/all_options.json', 'r') as f:
+        with open('gym_env_files/envs/all_options_real.json', 'r') as f:
             full_space = json.load(f)
 
         self.full_state_space = full_space['full_state_space']
@@ -82,6 +105,8 @@ class IHMBulletEnv(gym.Env):
         :return:
         """
         # Move  hand to  open pose
+        action_type = self.gripper.action_type
+        self.gripper.action_type = self.gripper.action_type_JA
         done_open, _ = self.gripper.move_fingers_to_pose(self.gripper.open_fingers_pose, abs_tol=0.1)
         print("Complete Open? {}".format(done_open))
 
@@ -96,6 +121,7 @@ class IHMBulletEnv(gym.Env):
         self.prev_cube_pos = self.obs['object_pos']
         self.prev_cube_orn = self.obs['object_orientation']
         self.episode_count = 0
+        self.gripper.action_type = action_type
         return self.obs
 
     def step(self, action):
@@ -109,12 +135,14 @@ class IHMBulletEnv(gym.Env):
             info (dict): contains auxiliary diagnostic information (helpful for debugging, and sometimes learning)
 
         """
+        self.episode_count += 1
+
         # Select action type
         self.prev_cube_pos = self.obs['object_pos']
         self.prev_cube_orn = self.obs['object_orientation']
+
         # Take a step
-        print("RANDOM ACTION:", list(action['joint_angles']))
-        self.gripper.step_sim(list(action['joint_angles']))
+        self.gripper.step_sim(action, self.cube)
 
         # Get the new observation
         self.obs = self._get_next_observation()
@@ -124,10 +152,8 @@ class IHMBulletEnv(gym.Env):
 
         # Get done
         done = self._get_done_bit()
-
         # Get info
         info = None
-        self.episode_count += 1
 
         return self.obs, reward, done, info
 
@@ -135,9 +161,9 @@ class IHMBulletEnv(gym.Env):
         # pass through full list, if observation in list, update it
         self.gripper.get_joint_angles()
         self.cube.get_curr_pose()
-        print(self.gripper.curr_joint_states)
-        print(self.gripper.curr_joint_poses)
-        print(self.gripper.prox_indices)
+        # print(self.gripper.curr_joint_states)
+        # print(self.gripper.curr_joint_poses)
+        # print(self.gripper.prox_indices)
         next_obs = {}
 
         for key in dict(self.obs_space).keys():
@@ -221,9 +247,8 @@ class IHMBulletEnv(gym.Env):
             return done
 
         # If object stops moving, raise done flag
-        if np.isclose(self.prev_cube_pos, self.obs['object_pos']).all() and np.isclose(self.prev_cube_orn,
-                                                                                       self.obs['object_orientation'])\
-                .all():
+        if np.isclose(self.prev_cube_pos, self.obs['object_pos'], atol=1e-05).all() and np.isclose(self.prev_cube_orn
+                ,self.obs['object_orientation'], atol=1e-05).all() and self.episode_count > self.min_count_for_done:
             done = True
             return done
         done = False

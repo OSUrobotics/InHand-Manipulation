@@ -24,6 +24,21 @@ class SceneObject:
         self.next_pos = None
         self.next_orn = None
         self.start_pos, self.start_orn = p.getBasePositionAndOrientation(self.object_id)
+        self.cube_size = 0.04
+        # TODO: change this to reflect number of contact points
+        self.start_pos_left, self.start_orn_left = (self.start_pos[0] - self.cube_size,
+                                                    self.start_pos[1] - self.cube_size,
+                                                    self.start_pos[2]), self.start_orn
+        self.start_pos_right, self.start_orn_right = (self.start_pos[0] - self.cube_size,
+                                                    self.start_pos[1] + self.cube_size,
+                                                    self.start_pos[2]), self.start_orn
+        self.start_cp = [(self.start_pos_left, self.start_orn_left), (self.start_pos_right, self.start_orn_right)]
+        self.start_cube_start_cp = []
+        self.start_pos_cube_origin, self.start_orn_cube_origin = p.invertTransform(self.start_pos, self.start_orn)
+        for index in range(0, len(self.start_cp)):
+            self.start_cube_start_cp.append(p.multiplyTransforms(self.start_pos_cube_origin, self.start_orn_cube_origin,
+                                                                                self.start_cp[index][0],
+                                                                                self.start_cp[index][1]))
 
     def get_curr_pose(self):
         self.curr_pos, self.curr_orn = p.getBasePositionAndOrientation(self.object_id)

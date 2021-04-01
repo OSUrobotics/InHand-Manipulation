@@ -37,6 +37,9 @@ class Manipulator(SceneObject):
         self.create_joint_dict(key_names)
         self.next_info= None
         self.next_joint_poses = None
+        self.action_type = self.action_type_JA
+        self.target_marker = Markers.Marker(color=[0, 1, 0]).set_marker_pose([0, 0, 0])
+        self.cp_marker = Markers.Marker().set_marker_pose([0, 0, 0])
 
     # def __repr__(self):
     #     return "This Gripper has {} joints called {}".format(self.num_joints, self.joint_dict_with_base.keys())
@@ -143,7 +146,7 @@ class Manipulator(SceneObject):
         tot_attempts = 30
         in_contact = False
         for i in range(0, tot_attempts):
-            target_pos =  []
+            target_pos = []
             # p.stepSimulation()
             # time.sleep(1. / 240.)
             contact_points = self.get_contact_points(cube.object_id)
@@ -158,14 +161,35 @@ class Manipulator(SceneObject):
                                                                  targetPositions=target_pos)
                 # p.setJointMotorControlArray(bodyIndex=self.gripper_id, jointIndices=self.joint_indices,
                 #                             controlMode=p.POSITION_CONTROL, targetPositions=pose_for_contact)
-                self.step_sim(pose_for_contact)
+                self.step_sim(pose_for_contact, cube)
 
             else:
                 in_contact = True
                 return in_contact
         raise EnvironmentError
 
-    def step_sim(self, move_to_joint_poses):
+    def action_type_JA(self, action, cube):
+        p.setJointMotorControlArray(bodyUniqueId=self.gripper_id, jointIndices=self.joint_indices,
+                                    controlMode=p.POSITION_CONTROL, targetPositions=action)
+
+    def action_type_JV(self, action, cube):
+        p.setJointMotorControlArray(bodyUniqueId=self.gripper_id, jointIndices=self.joint_indices,
+                                    controlMode=p.VELOCITY_CONTROL, targetVelocities=action)
+        pass
+
+    def action_type_PI(self, action, cube):
+        action_dict = dict(action)
+        action_values = action_dict['x_y']
+        action_values = np.append(action_values, action_dict['deg_orn'])
+        self.next_info = self.get_pose_in_world_origin(cube, action_values)
+
+        self.next_joint_poses = p.calculateInverseKinematics2(bodyUniqueId=self.gripper_id,
+                                                              endEffectorLinkIndices=self.end_effector_indices,
+                                                              targetPositions=self.next_info[2])
+        p.setJointMotorControlArray(bodyUniqueId=self.gripper_id, jointIndices=self.joint_indices,
+                                    controlMode=p.POSITION_CONTROL, targetPositions=self.next_joint_poses)
+
+    def step_sim(self, move_to_joint_poses, cube):
         """
         Take a step in the simulation
         :param move_to_joint_poses:
@@ -173,8 +197,7 @@ class Manipulator(SceneObject):
         """
         p.stepSimulation()
         time.sleep(1. / 240.)
-        p.setJointMotorControlArray(bodyIndex=self.gripper_id, jointIndices=self.joint_indices,
-                                    controlMode=p.POSITION_CONTROL, targetPositions=move_to_joint_poses)
+        self.action_type(move_to_joint_poses, cube)
 
     def move_fingers_to_pose(self, joint_poses, cube=None, abs_tol=1e-05, contact_check=False):
         """
@@ -209,7 +232,7 @@ class Manipulator(SceneObject):
             else:
                 # p.setJointMotorControlArray(bodyIndex=self.gripper_id, jointIndices=self.joint_indices,
                 #                             controlMode=p.POSITION_CONTROL, targetPositions=joint_poses)
-                self.step_sim(joint_poses)
+                self.step_sim(joint_poses, cube)
         if cube is not None:
             contact_points = self.get_contact_points(cube.object_id)
 
@@ -236,7 +259,7 @@ class Manipulator(SceneObject):
         """
         T_cube_cp = p.multiplyTransforms(T_cube_origin[0], T_cube_origin[1], curr_contact_points[i], self.curr_orn)
         T_origin_new_cp = p.multiplyTransforms(T_origin_nextpose_cube[0], T_origin_nextpose_cube[1],
-                                               T_cube_cp[0], T_cube_cp[1])
+                                           T_cube_cp[0], T_cube_cp[1])
 
         return T_origin_new_cp
 
@@ -257,7 +280,7 @@ class Manipulator(SceneObject):
 
         return T_origin_nl
 
-    def get_pose_in_world_origin(self, cube, data):
+    def get_pose_in_world_origin_expert(self, cube, data):
         """
         Gets the new contact points in world coordinates
         :param cube: instance of object in scene class(object to move)
@@ -279,6 +302,48 @@ class Manipulator(SceneObject):
             T_origin_new_cp_orn.append(T_origin_new_cp[1])
             T_origin_nl = self.get_origin_links(i, self.end_effector_indices[i], T_origin_new_cp_pos,
                                                 T_origin_new_cp_orn, curr_contact_points)
+            T_origin_new_link_pos.append(T_origin_nl[0])
+            T_origin_new_link_orn.append(T_origin_nl[1])
+
+        return [T_origin_new_cp_pos, T_origin_new_cp_orn, T_origin_new_link_pos, T_origin_new_link_orn, \
+                T_origin_nextpose_cube]
+
+    def get_origin_no_cp_pts(self, cube, index, T_origin_target):
+        T_origin_no_cp = p.multiplyTransforms(T_origin_target[0], T_origin_target[1], cube.start_cube_start_cp[index][0],
+                                              cube.start_cube_start_cp[index][1])
+        # print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@!!!!!!!!!!!!!!!!!!!!!!!!@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+        # Markers.Marker().reset_marker_pose(T_origin_no_cp[0], self.cp_marker)
+        return T_origin_no_cp
+
+    def get_pose_in_world_origin(self, cube, data):
+        """
+        Gets the new contact points in world coordinates
+        :param cube: instance of object in scene class(object to move)
+        :param data: line in file of human data [x,y,rmag,f_x,f_y,f_rot_mag]
+        :return: list T_origin_newcontactpoints: next contact points in world coordinates for left and right
+        """
+        T_origin_nextpose_cube = self.get_origin_cube(cube, data)
+        # Markers.Marker(color=[0,1,0]).reset_marker_pose(T_origin_nextpose_cube[0], self.target_marker)
+        curr_contact_points = self.get_contact_points(cube.object_id)
+        cube.get_curr_pose()
+        self.get_curr_pose()
+        T_cube_origin = p.invertTransform(cube.curr_pos, cube.curr_orn)
+        T_origin_new_cp_pos = []
+        T_origin_new_cp_orn = []
+        T_origin_new_link_pos = []
+        T_origin_new_link_orn = []
+        for i in range(0, len(self.end_effector_indices)):
+            if None in curr_contact_points:
+                T_origin_new_cp = self.get_origin_no_cp_pts(cube, i, T_origin_nextpose_cube)
+                T_origin_new_cp_pos.append(T_origin_new_cp[0])
+                T_origin_new_cp_orn.append(T_origin_new_cp[1])
+                T_origin_nl = T_origin_new_cp
+            else:
+                T_origin_new_cp = self.get_origin_cp(i, cube, T_cube_origin, T_origin_nextpose_cube, curr_contact_points)
+                T_origin_new_cp_pos.append(T_origin_new_cp[0])
+                T_origin_new_cp_orn.append(T_origin_new_cp[1])
+                T_origin_nl = self.get_origin_links(i, self.end_effector_indices[i], T_origin_new_cp_pos,
+                                                    T_origin_new_cp_orn, curr_contact_points)
             T_origin_new_link_pos.append(T_origin_nl[0])
             T_origin_new_link_orn.append(T_origin_nl[1])
 
@@ -305,7 +370,7 @@ class Manipulator(SceneObject):
                 except EnvironmentError:
                     print("We Have Lost Contact with Object. Aborting Mission")
                     setup.quit_sim()
-            self.next_info = self.get_pose_in_world_origin(cube, line)
+            self.next_info = self.get_pose_in_world_origin_expert(cube, line)
             self.next_joint_poses = p.calculateInverseKinematics2(bodyUniqueId=self.gripper_id,
                                                              endEffectorLinkIndices=self.end_effector_indices,
                                                              targetPositions=self.next_info[2])

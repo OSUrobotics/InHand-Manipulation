@@ -9,6 +9,8 @@ import argparse
 import gym
 import gym_env_files
 import numpy as np
+import gui
+from PyQt5.QtWidgets import QApplication
 
 
 def load_from_file(filename, parser, namespace):
@@ -39,6 +41,16 @@ def import_arguments(args, parser):
 
 if __name__ == "__main__":
     """
+    Start GUI Interface
+    """
+    # GUI Stuff
+    app = QApplication([])
+    interface = gui.GUI()
+    interface.show()
+    app.exec_()
+
+
+    """
     Parse Arguments and start sim
     """
     parser = argparse.ArgumentParser()
@@ -48,7 +60,8 @@ if __name__ == "__main__":
     import_arguments(args, parser)
     print("ARGUMENTS PASSED: {}".format(args))
 
-   #  # Moving code
+
+    #  # Moving code
    #
    #  done_mov_obj = gripper.manipulate_object(cube, human_data, contact_check=True)
    #  time.sleep(2)
@@ -56,18 +69,15 @@ if __name__ == "__main__":
     """
     For importing gym env
     """
-    env = gym.make("ihm-v0", kwargs={'args': args, 'state_space_type': None, 'state_space_length': 3,
-                                     'action_space_type': 'PATH'})
+    env = gym.make("ihm-v0", kwargs={'args': args})
     env.reset()
     i = 0
-    action = np.array([0.17, 0.0, -0.17, 0.0])
-    while i < 100:
+    # action = np.array([0.17, 0.0, -0.17, 0.0])
+    while i < 3000:
+        # print(i)
+        obs, reward, done, info = env.step(action=env.action_space.sample())
         i += 1
-        print(i)
-        if i < 50:
-            env.step(action=env.action_space.sample())
-        elif i == 50:
-            env.reset()
-        else:
-            continue
+        print("EPISODE COUNT: {}, DONE BIT: {}, REWARD: {}, ITER: {}".format(env.episode_count, done, reward, i))
+        if done:
+            obs = env.reset()
     env.close()

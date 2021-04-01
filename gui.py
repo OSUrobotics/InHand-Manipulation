@@ -271,12 +271,42 @@ class GUI(QMainWindow):
 
     def add_option(self, new_text, layout):
         option = self.sender()
-        range_layout = QHBoxLayout()
-        layout.addLayout(range_layout)
-        range_layout.addWidget(QLabel("Min, Max"))
-        range_line = QLineEdit("")
-        range_layout.addWidget(range_line)
-        range_line.editingFinished.connect(lambda: self.add_range(option, new_text))
+        if option.isChecked():
+            # Check if it exists in textbox
+                # if it does, Don't add box
+            # else do the following:
+            range_layout = QHBoxLayout()
+            layout.addLayout(range_layout)
+            range_layout.addWidget(QLabel("Min, Max"))
+            range_line = QLineEdit("")
+            range_layout.addWidget(range_line)
+            range_line.editingFinished.connect(lambda: self.add_range(option, new_text))
+
+        else:
+            # Check if it exists in textbox
+            print("OPTION BOX TEXT: {}".format(option.text()))
+            print("TEXT BOX TEXT: {}".format(new_text.toPlainText()))
+            if option.text() in new_text.toPlainText():
+                # find text
+                find_in_text = new_text.toPlainText()
+                found_start = find_in_text.find(option.text())
+                found_end = find_in_text[found_start:].find("]")
+                text_to_remove = find_in_text[found_start: found_start + found_end + 1]
+                print("FOUND!: {}".format(text_to_remove))
+                # Remove from textfield
+                try:
+                    front_part = find_in_text[:found_start]
+                    back_part = find_in_text[found_start + found_end + 2:]
+                    replace_above = front_part + back_part
+                except IndexError:
+                    replace_above = ""
+                    front_part = find_in_text[:found_start]
+                    back_part = find_in_text[found_start + found_end:]
+                print("REPLACE: {} Front: {} num: {} Back: {} num: {}".format(replace_above, front_part, found_start, back_part, found_end))
+                new_text.setText(replace_above)
+            # if it doesn't, do nothing
+            # else remove from textfield
+            pass
 
     def add_range(self, option_box, latest_text):
         range_text_box = self.sender()

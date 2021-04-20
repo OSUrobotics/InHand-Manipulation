@@ -71,13 +71,14 @@ if __name__ == "__main__":
     """
     env = gym.make("ihm-v0", kwargs={'args': args})
     env.reset()
-    i = 0
-    # action = np.array([0.17, 0.0, -0.17, 0.0])
-    while i < 3000:
-        # print(i)
-        obs, reward, done, info = env.step(action=env.action_space.sample())
-        i += 1
-        print("EPISODE COUNT: {}, DONE BIT: {}, REWARD: {}, ITER: {}".format(env.episode_count, done, reward, i))
-        if done:
-            obs = env.reset()
-    env.close()
+    done_mov_obj = env.gripper.manipulate_object(env.cube, env.human_data, contact_check=True)
+    # i = 0
+    # # action = np.array([0.17, 0.0, -0.17, 0.0])
+    # while i < 3000:
+    #     # print(i)
+    #     obs, reward, done, info = env.step(action=env.action_space.sample())
+    #     i += 1
+    #     print("EPISODE COUNT: {}, DONE BIT: {}, REWARD: {}, ITER: {}".format(env.episode_count, done, reward, i))
+    #     if done:
+    #         obs = env.reset()
+    # env.close()

@@ -259,28 +259,42 @@ class GUI(QMainWindow):
             TextField.append(key+": "+ str_value)
 
     def create_boxes(self, options, layout, box_style, new_text_box, group=None):
-        options_list = []
+        options_list = {}
+        range_list = []
+        i = 0
         for option in options.keys():
+            range_layout = QHBoxLayout()
+            layout.addLayout(range_layout)
             button = box_style(option)
-            options_list.append(button)
+            options_list.update({button: i})
             if group is not None:
                 group.addButton(button)
-            layout.addWidget(button)
-            button.toggled.connect(lambda: self.add_option(new_text_box, layout))
+            range_layout.addWidget(button)
+            range_layout.addWidget(QLabel("Min, Max"))
+            range_line = QLineEdit("")
+            range_list.append(range_line)
+            range_layout.addWidget(range_line)
+            range_line.setReadOnly(True)
+            button.toggled.connect(lambda: self.add_option(new_text_box, layout, options_list, range_list))
+            range_line.editingFinished.connect(lambda: self.add_range(options_list, range_list, new_text_box))
+            i += 1
+        print("RANGE_LIST: {}, i: {}".format(range_list, i))
         return options_list
 
-    def add_option(self, new_text, layout):
+    def add_option(self, new_text, layout, options_dict, min_max_text_list):
         option = self.sender()
+        min_max_text_index = options_dict[option]
         if option.isChecked():
+            min_max_text_list[min_max_text_index].setReadOnly(False)
             # Check if it exists in textbox
                 # if it does, Don't add box
             # else do the following:
-            range_layout = QHBoxLayout()
-            layout.addLayout(range_layout)
-            range_layout.addWidget(QLabel("Min, Max"))
-            range_line = QLineEdit("")
-            range_layout.addWidget(range_line)
-            range_line.editingFinished.connect(lambda: self.add_range(option, new_text))
+            # range_layout = QHBoxLayout()
+            # layout.addLayout(range_layout)
+            # range_layout.addWidget(QLabel("Min, Max"))
+            # range_line = QLineEdit("")
+            # range_layout.addWidget(range_line)
+            # range_line.editingFinished.connect(lambda: self.add_range(option, new_text))
 
         else:
             # Check if it exists in textbox
@@ -302,20 +316,29 @@ class GUI(QMainWindow):
                     replace_above = ""
                     front_part = find_in_text[:found_start]
                     back_part = find_in_text[found_start + found_end:]
-                print("REPLACE: {} Front: {} num: {} Back: {} num: {}".format(replace_above, front_part, found_start, back_part, found_end))
+                print("REPLACE: {} Front: {} num: {} Back: {} num: {}".format(replace_above, front_part, found_start,
+                                                                              back_part, found_end))
                 new_text.setText(replace_above)
-            # if it doesn't, do nothing
-            # else remove from textfield
+            min_max_text_list[min_max_text_index].setText("")
+            min_max_text_list[min_max_text_index].setReadOnly(True)
             pass
 
-    def add_range(self, option_box, latest_text):
+    def add_range(self, option_dict, min_max_list, text_box):
         range_text_box = self.sender()
+        get_index = min_max_list.index(range_text_box)
+        print("KEY: {}, INDEX: {}, DICT {}".format(range_text_box, get_index, option_dict))
+        for key, value in option_dict.items():
+            if value == get_index:
+                option_box = key
         range_text = range_text_box.text()
         name_text = option_box.text()
-        final_text = name_text+": ["+range_text+"]"
+        if name_text not in text_box.toPlainText():
+            final_text = name_text+": ["+range_text+"]"
 
-        if option_box.isChecked():
-            latest_text.append(final_text)
+            if option_box.isChecked():
+                text_box.append(final_text)
+            range_text_box.setReadOnly(True)
+
 
     def update_json_file(self):
         json_dict = {}
@@ -358,6 +381,7 @@ class GUI(QMainWindow):
         # Write from JSON file
         with open('gym_env_files/envs/rl_spaces.json', 'w') as f:
             json.dump(json_dict, f)
+        self.close()
 
     def convert_to_dict(self, text_to_add):
         new_dict = {}

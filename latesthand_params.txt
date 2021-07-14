@@ -10,4 +10,4 @@
 --start_grasp_pose=-0.73
 --start_grasp_pose=1.0472
 --path_to_gripper_sdf=ExampleSimWorld-Josh/2v2_hands/999/testing.sdf
---plot_human_data=No
+--plot_human_data=Yes

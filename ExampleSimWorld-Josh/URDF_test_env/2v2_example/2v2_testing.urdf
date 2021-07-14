@@ -1,0 +1,148 @@
+﻿<?xml version="1.0"?>
+<robot name="test_gripper">
+
+  <link name="body_palm_lpinvrpin">
+    <visual>
+      <origin rpy="1.57 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="objFiles/body_palm_lpinvrpin.obj" scale="1 1 1"/>
+      </geometry>
+       <material name="yellow">
+        <color rgba="1 1 0.4 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="1.57 0 0" xyz="0 0 0"/>
+      <geometry>
+	 	<mesh filename="objFiles/body_palm_lpinvrpin_collision.obj" scale="1 1 1"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+
+
+
+  <joint name="left_prox_joint" type="revolute">
+    <axis xyz="1 0 0"/>
+    <limit effort="1000.0" lower="-3.14" upper="3.14" velocity="0.5"/>
+    <origin rpy="0 0 0" xyz="0.0 -0.02338 0"/>
+    <parent link="body_palm_lpinvrpin"/>
+    <child link="body_l_prox_pinvpin2"/>
+  </joint>
+
+
+  <link name="body_l_prox_pinvpin2">
+    <visual>
+      <origin rpy="1.57 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="objFiles/body_l_prox_pinvpin2.obj" scale="1 1 1"/>
+      </geometry>
+       
+    </visual>
+    <collision>
+      <origin rpy="1.57 0 0" xyz="0 0 0"/>
+      <geometry>
+	 	<mesh filename="objFiles/body_l_prox_pinvpin2_collision.obj" scale="1 1 1"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+
+
+  <joint name="left_dist_joint" type="revolute">
+    <axis xyz="1 0 0"/>
+    <limit effort="1000.0" lower="-3.14" upper="3.14" velocity="0.5"/>
+    <origin rpy="0 0 0" xyz="0.0 0 0.06379"/>
+    <parent link="body_l_prox_pinvpin2"/>
+    <child link="body_l_dist_pin2vround2"/>
+  </joint>
+
+
+  <link name="body_l_dist_pin2vround2">
+    <visual>
+      <origin rpy="1.57 0 0" xyz="0 0.0 0"/>
+      <geometry>
+        <mesh filename="objFiles/body_l_dist_pin2vround2.obj" scale="1 1 1"/>
+      </geometry>
+       
+    </visual>
+    <collision>
+      <origin rpy="1.57 0 0" xyz="0 0 0"/>
+      <geometry>
+	 	<mesh filename="objFiles/body_l_dist_pin2vround2_collision.obj" scale="1 1 1"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+
+
+  <joint name="right_prox_joint" type="revolute">
+    <axis xyz="1 0 0"/>
+    <limit effort="1000.0" lower="-3.14" upper="3.14" velocity="0.5"/>
+    <origin rpy="0 0 0" xyz="0.0 0.02338 0"/>
+    <parent link="body_palm_lpinvrpin"/>
+    <child link="body_r_prox_pinvpin2"/>
+  </joint>
+
+
+  <link name="body_r_prox_pinvpin2">
+    <visual>
+      <origin rpy="1.57 0 0" xyz="0 0.0 0"/>
+      <geometry>
+        <mesh filename="objFiles/body_r_prox_pinvpin2.obj" scale="1 1 1"/>
+      </geometry>
+       
+    </visual>
+    <collision>
+      <origin rpy="1.57 0 0" xyz="0 0 0"/>
+      <geometry>
+	 	<mesh filename="objFiles/body_r_prox_pinvpin2_collision.obj" scale="1 1 1"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+
+
+  <joint name="right_dist_joint" type="revolute">
+    <axis xyz="1 0 0"/>
+    <limit effort="1000.0" lower="-3.14" upper="3.14" velocity="0.5"/>
+    <origin rpy="0 0 0" xyz="0.0 0 0.06379"/>
+    <parent link="body_r_prox_pinvpin2"/>
+    <child link="body_r_dist_pin2vround2"/>
+  </joint>
+
+
+  <link name="body_r_dist_pin2vround2">
+    <visual>
+      <origin rpy="1.57 0 0" xyz="0 0.0 0"/>
+      <geometry>
+        <mesh filename="objFiles/body_r_dist_pin2vround2.obj" scale="1 1 1"/>
+      </geometry>
+       
+    </visual>
+    <collision>
+      <origin rpy="1.57 0 0" xyz="0 0 0"/>
+      <geometry>
+	 	<mesh filename="objFiles/body_r_dist_pin2vround2_collision.obj" scale="1 1 1"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+
+
+</robot>

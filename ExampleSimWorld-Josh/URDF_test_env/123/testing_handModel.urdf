@@ -1,0 +1,91 @@
+﻿<?xml version="1.0"?>
+<robot name="test_gripper">
+
+  <link name="body_palm_lpinvrpin">
+    <visual>
+      <origin rpy="1.57 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="objFiles/body_palm_lpinvrpin.obj" scale="1 1 1"/>
+      </geometry>
+       <material name="yellow">
+        <color rgba="1 1 0.4 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="1.57 0 0" xyz="0 0 0"/>
+      <geometry>
+	 	<mesh filename="objFiles/body_palm_lpinvrpin_collision.obj" scale="1 1 1"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+
+
+
+  <joint name="left_prox_joint" type="revolute">
+    <axis xyz="1 0 0"/>
+    <limit effort="1000.0" lower="-3.14" upper="3.14" velocity="0.5"/>
+    <origin rpy="0 0 0" xyz="0.0 -0.07 0"/>
+    <parent link="body_palm_lpinvrpin"/>
+    <child link="body_l_prox_pinvspring"/>
+  </joint>
+
+
+  <link name="body_l_prox_pinvspring">
+    <visual>
+      <origin rpy="1.57 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="objFiles/body_l_prox_pinvspring.obj" scale="1 1 1"/>
+      </geometry>
+       <material name="red">
+        <color rgba="1 0 0 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="1.57 0 0" xyz="0 0 0"/>
+      <geometry>
+	 	<mesh filename="objFiles/body_l_prox_pinvspring_collision.obj" scale="1 1 1"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+
+
+
+  <joint name="right_prox_joint" type="revolute">
+    <axis xyz="1 0 0"/>
+    <limit effort="1000.0" lower="-3.14" upper="3.14" velocity="0.5"/>
+    <origin rpy="0 0 0" xyz="0.0 0.07 0"/>
+    <parent link="body_palm_lpinvrpin"/>
+    <child link="body_r_prox_pinvpin"/>
+  </joint>
+
+
+  <link name="body_r_prox_pinvpin">
+    <visual>
+      <origin rpy="1.57 0 0" xyz="0 0.0 0"/>
+      <geometry>
+        <mesh filename="objFiles/body_r_prox_pinvpin.obj" scale="1 1 1"/>
+      </geometry>
+       <material name="red">
+        <color rgba="1 0 0 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="1.57 0 0" xyz="0 0 0"/>
+      <geometry>
+	 	<mesh filename="objFiles/body_r_prox_pinvpin_collision.obj" scale="1 1 1"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+</robot>

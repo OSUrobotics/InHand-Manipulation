@@ -1,0 +1,221 @@
+
+<?xml version="1.0" ?>
+<sdf version='1.6'>
+<world name='default'>
+
+<model name='2v2_l.5v.5_r.5v.5_lpinvpin2vround2_rpinvpin2vround2'>
+<pose>0 0 0 0 0 0</pose>
+
+<link name='world'>
+</link>
+
+<link name='body_palm_lpinvrpin'>
+<pose>0 0 0 1.57 0 0</pose>
+<collision name='body_palm_lpinvrpin_collision'>
+<geometry>
+<mesh>
+<scale>1 1 1</scale>
+<uri>objFiles/body_palm_lpinvrpin_collision.obj</uri>
+</mesh>
+</geometry>
+</collision>
+<visual name='body_palm_lpinvrpin_visual'>
+<geometry>
+<mesh>
+<scale>1 1 1</scale>
+<uri>objFiles/body_palm_lpinvrpin.obj</uri>
+</mesh>
+</geometry>
+</visual>
+<gravity>1</gravity>
+<self_collide>1</self_collide>
+</link>
+
+<joint name='body_palm_lpinvrpin' type='fixed'>
+<child>body_palm_lpinvrpin</child>
+<parent>world</parent>
+<axis>
+<xyz>0 0 0</xyz>
+<dynamics>
+<damping>100</damping>
+<friction>100</friction>
+<spring_reference>0</spring_reference>
+<spring_stiffness>0</spring_stiffness>
+</dynamics>
+</axis>
+</joint>
+
+<link name='body_l_prox_pinvpin2'>
+<pose>0 -0.2338 0 1.57 0 0</pose>
+<collision name='body_l_prox_pinvpin2_collision'>
+<geometry>
+<mesh>
+<scale>1 1 1</scale>
+<uri>objFiles/body_l_prox_pinvpin2_collision.obj</uri>
+</mesh>
+</geometry>
+</collision>
+<visual name='body_l_prox_pinvpin2_visual'>
+<geometry>
+<mesh>
+<scale>1 1 1</scale>
+<uri>objFiles/body_l_prox_pinvpin2.obj</uri>
+</mesh>
+</geometry>
+</visual>
+<gravity>1</gravity>
+<self_collide>1</self_collide>
+</link>
+
+<joint name='body_l_prox_pinvpin2' type='continuous'>
+<child>body_l_prox_pinvpin2</child>
+<parent>body_palm_lpinvrpin</parent>
+<axis>
+<xyz>1 0 0</xyz>
+<dynamics>
+<damping>100</damping>
+<friction>100</friction>
+<spring_reference>0</spring_reference>
+<spring_stiffness>0</spring_stiffness>
+</dynamics>
+</axis>
+</joint>
+
+<link name='body_l_dist_pin2vround2'>
+<pose>0 -0.2338 0.6379 1.57 0 0</pose>
+<collision name='body_l_dist_pin2vround2_collision'>
+<geometry>
+<mesh>
+<scale>1 1 1</scale>
+<uri>objFiles/body_l_dist_pin2vround2_collision.obj</uri>
+</mesh>
+</geometry>
+</collision>
+<visual name='body_l_dist_pin2vround2_visual'>
+<geometry>
+<mesh>
+<scale>1 1 1</scale>
+<uri>objFiles/body_l_dist_pin2vround2.obj</uri>
+</mesh>
+</geometry>
+</visual>
+<gravity>1</gravity>
+<self_collide>1</self_collide>
+</link>
+
+<joint name='body_l_dist_pin2vround2' type='continuous'>
+<child>body_l_dist_pin2vround2</child>
+<parent>body_l_prox_pinvpin2</parent>
+<axis>
+<xyz>1 0 0</xyz>
+<dynamics>
+<damping>100</damping>
+<friction>100</friction>
+<spring_reference>0</spring_reference>
+<spring_stiffness>0</spring_stiffness>
+</dynamics>
+</axis>
+</joint>
+
+<link name='body_r_prox_pinvpin2'>
+<pose>0 0.2338 0 1.57 0 0</pose>
+<collision name='body_r_prox_pinvpin2_collision'>
+<geometry>
+<mesh>
+<scale>1 1 1</scale>
+<uri>objFiles/body_r_prox_pinvpin2_collision.obj</uri>
+</mesh>
+</geometry>
+</collision>
+<visual name='body_r_prox_pinvpin2_visual'>
+<geometry>
+<mesh>
+<scale>1 1 1</scale>
+<uri>objFiles/body_r_prox_pinvpin2.obj</uri>
+</mesh>
+</geometry>
+</visual>
+<gravity>1</gravity>
+<self_collide>1</self_collide>
+</link>
+
+<joint name='body_r_prox_pinvpin2' type='continuous'>
+<child>body_r_prox_pinvpin2</child>
+<parent>body_palm_lpinvrpin</parent>
+<axis>
+<xyz>1 0 0</xyz>
+<dynamics>
+<damping>100</damping>
+<friction>100</friction>
+<spring_reference>0</spring_reference>
+<spring_stiffness>0</spring_stiffness>
+</dynamics>
+</axis>
+</joint>
+
+<link name='body_r_dist_pin2vround2'>
+<pose>0 0.2338 0.6379 1.57 0 0</pose>
+<collision name='body_r_dist_pin2vround2_collision'>
+<geometry>
+<mesh>
+<scale>1 1 1</scale>
+<uri>objFiles/body_r_dist_pin2vround2_collision.obj</uri>
+</mesh>
+</geometry>
+</collision>
+<visual name='body_r_dist_pin2vround2_visual'>
+<geometry>
+<mesh>
+<scale>1 1 1</scale>
+<uri>objFiles/body_r_dist_pin2vround2.obj</uri>
+</mesh>
+</geometry>
+</visual>
+<gravity>1</gravity>
+<self_collide>1</self_collide>
+</link>
+
+<joint name='body_r_dist_pin2vround2' type='continuous'>
+<child>body_r_dist_pin2vround2</child>
+<parent>body_r_prox_pinvpin2</parent>
+<axis>
+<xyz>1 0 0</xyz>
+<dynamics>
+<damping>100</damping>
+<friction>100</friction>
+<spring_reference>0</spring_reference>
+<spring_stiffness>0</spring_stiffness>
+</dynamics>
+</axis>
+</joint>
+
+</model>
+
+<model name='Measuring_Block'>
+<pose>0 0 0.1 1.57 0 0</pose>
+
+<link name='Measuring_Block'>
+<pose>0 0 0 0 0 0</pose>
+<collision name='Measuring_Block_collision'>
+<geometry>
+<mesh>
+<scale>1 1 1</scale>
+<uri>objFiles/Measuring_Block_collision.obj</uri>
+</mesh>
+</geometry>
+</collision>
+<visual name='Measuring_Block_visual'>
+<geometry>
+<mesh>
+<scale>1 1 1</scale>
+<uri>objFiles/Measuring_Block.obj</uri>
+</mesh>
+</geometry>
+</visual>
+<gravity>1</gravity>
+<self_collide>1</self_collide>
+</link>
+
+</model>
+</world>
+</sdf>

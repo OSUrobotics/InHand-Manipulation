@@ -1,0 +1,196 @@
+
+<?xml version="1.0" ?>
+<sdf version='1.6'>
+<world name='default'>
+
+<model name='2v2_l.5v.5_r.5v.5_lpinvspringvround_rpinvpinvround'>
+<pose>0 0 .04 0 1.57 0</pose>
+
+<link name='world'>
+</link>
+
+<link name='body_palm_lpinvrpin'>
+<pose>0 0 0 1.57 0 0</pose>
+<collision name='body_palm_lpinvrpin_collision'>
+<geometry>
+<mesh>
+<scale>1 1 1</scale>
+<uri>objFiles/body_palm_lpinvrpin_collision.obj</uri>
+</mesh>
+</geometry>
+</collision>
+<visual name='body_palm_lpinvrpin_visual'>
+<geometry>
+<mesh>
+<scale>1 1 1</scale>
+<uri>objFiles/body_palm_lpinvrpin.obj</uri>
+</mesh>
+</geometry>
+</visual>
+<gravity>1</gravity>
+<self_collide>1</self_collide>
+</link>
+
+<joint name='body_palm_lpinvrpin' type='fixed'>
+<child>body_palm_lpinvrpin</child>
+<parent>world</parent>
+<axis>
+<xyz>0 0 0</xyz>
+<dynamics>
+<damping>100</damping>
+<friction>100</friction>
+<spring_reference>0</spring_reference>
+<spring_stiffness>0</spring_stiffness>
+</dynamics>
+</axis>
+</joint>
+
+<link name='body_l_prox_pinvspring'>
+<pose>0 -0.07 0 1.57 0 0</pose>
+<collision name='body_l_prox_pinvspring_collision'>
+<geometry>
+<mesh>
+<scale>1 1 1</scale>
+<uri>objFiles/body_l_prox_pinvspring_collision.obj</uri>
+</mesh>
+</geometry>
+</collision>
+<visual name='body_l_prox_pinvspring_visual'>
+<geometry>
+<mesh>
+<scale>1 1 1</scale>
+<uri>objFiles/body_l_prox_pinvspring.obj</uri>
+</mesh>
+</geometry>
+</visual>
+<gravity>1</gravity>
+<self_collide>1</self_collide>
+</link>
+
+<joint name='body_l_prox_pinvspring' type='continuous'>
+<child>body_l_prox_pinvspring</child>
+<parent>body_palm_lpinvrpin</parent>
+<axis>
+<xyz>1 0 0</xyz>
+</axis>
+</joint>
+
+<link name='body_l_dist_springvround'>
+<pose>0 -0.07 0.060000000000000005 1.57 0 0</pose>
+<collision name='body_l_dist_springvround_collision'>
+<geometry>
+<mesh>
+<scale>1 1 1</scale>
+<uri>objFiles/body_l_dist_springvround_collision.obj</uri>
+</mesh>
+</geometry>
+</collision>
+<visual name='body_l_dist_springvround_visual'>
+<geometry>
+<mesh>
+<scale>1 1 1</scale>
+<uri>objFiles/body_l_dist_springvround.obj</uri>
+</mesh>
+</geometry>
+</visual>
+<gravity>1</gravity>
+<self_collide>1</self_collide>
+</link>
+
+<joint name='body_l_dist_springvround' type='continuous'>
+<child>body_l_dist_springvround</child>
+<parent>body_l_prox_pinvspring</parent>
+<axis>
+<xyz>1 0 0</xyz>
+</axis>
+</joint>
+
+<link name='body_r_prox_pinvpin'>
+<pose>0 0.07 0 1.57 0 0</pose>
+<collision name='body_r_prox_pinvpin_collision'>
+<geometry>
+<mesh>
+<scale>1 1 1</scale>
+<uri>objFiles/body_r_prox_pinvpin_collision.obj</uri>
+</mesh>
+</geometry>
+</collision>
+<visual name='body_r_prox_pinvpin_visual'>
+<geometry>
+<mesh>
+<scale>1 1 1</scale>
+<uri>objFiles/body_r_prox_pinvpin.obj</uri>
+</mesh>
+</geometry>
+</visual>
+<self_collide>1</self_collide>
+</link>
+
+<joint name='body_r_prox_pinvpin' type='continuous'>
+<child>body_r_prox_pinvpin</child>
+<parent>body_palm_lpinvrpin</parent>
+<axis>
+<xyz>1 0 0</xyz>
+</axis>
+</joint>
+
+<link name='body_r_dist_pinvround'>
+<pose>0 0.07 0.060000000000000005 1.57 0 0</pose>
+<collision name='body_r_dist_pinvround_collision'>
+<geometry>
+<mesh>
+<scale>1 1 1</scale>
+<uri>objFiles/body_r_dist_pinvround_collision.obj</uri>
+</mesh>
+</geometry>
+</collision>
+<visual name='body_r_dist_pinvround_visual'>
+<geometry>
+<mesh>
+<scale>1 1 1</scale>
+<uri>objFiles/body_r_dist_pinvround.obj</uri>
+</mesh>
+</geometry>
+</visual>
+<gravity>1</gravity>
+<self_collide>1</self_collide>
+</link>
+
+<joint name='body_r_dist_pinvround' type='continuous'>
+<child>body_r_dist_pinvround</child>
+<parent>body_r_prox_pinvpin</parent>
+<axis>
+<xyz>1 0 0</xyz>
+</axis>
+</joint>
+
+</model>
+
+<model name='Measuring_Block'>
+<pose>.095 0 0 1.57 0 0</pose>
+
+<link name='Measuring_Block'>
+<pose>0 0 0 0 0 0</pose>
+<collision name='Measuring_Block_collision'>
+<geometry>
+<mesh>
+<scale>1 1 1</scale>
+<uri>objFiles/Measuring_Block_collision.obj</uri>
+</mesh>
+</geometry>
+</collision>
+<visual name='Measuring_Block_visual'>
+<geometry>
+<mesh>
+<scale>1 1 1</scale>
+<uri>objFiles/Measuring_Block.obj</uri>
+</mesh>
+</geometry>
+</visual>
+<gravity>1</gravity>
+<self_collide>1</self_collide>
+</link>
+
+</model>
+</world>
+</sdf>

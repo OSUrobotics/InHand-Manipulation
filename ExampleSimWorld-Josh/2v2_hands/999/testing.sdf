@@ -193,14 +193,17 @@
 </model>
 
 <model name='Measuring_Block'>
-<pose>0 0 0 1.57 0 0</pose>
+<!--pose>0 0 0.1 1.57 0 0</pose!-->
+<pose>0.12 0 0 1.57 0 0</pose>
 
 <link name='Measuring_Block'>
 <pose>0 0 0 0 0 0</pose>
+<!--pose>0.2 0 0 1.57 0 0</pose!-->
 <collision name='Measuring_Block_collision'>
 <geometry>
 <mesh>
 <scale>1 1 1</scale>
+<!--scale>1 0.5 0.5</scale!-->
 <uri>objFiles/Measuring_Block_collision.obj</uri>
 </mesh>
 </geometry>
@@ -209,6 +212,7 @@
 <geometry>
 <mesh>
 <scale>1 1 1</scale>
+<!--scale>1 0.5 0.5</scale!-->
 <uri>objFiles/Measuring_Block.obj</uri>
 </mesh>
 </geometry>
@@ -218,6 +222,7 @@
 </link>
 
 </model>
+
 
 </world>
 </sdf>

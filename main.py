@@ -84,6 +84,7 @@ if __name__ == "__main__":
 
     done_mov_obj = gripper.manipulate_object(cube, human_data, contact_check=True)
     time.sleep(2)
+    plot.plot_human_and_controller_data(human_data, gripper.object_traj_data)
 
 # #WITH GYM:
 #

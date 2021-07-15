@@ -41,6 +41,7 @@ class Manipulator(SceneObject):
         self.action_type = self.action_type_JA
         self.target_marker = Markers.Marker(color=[0, 1, 0]).set_marker_pose([0, 0, 0])
         self.cp_marker = Markers.Marker().set_marker_pose([0, 0, 0])
+        self.object_traj_data = []
 
 
     # def __repr__(self):
@@ -297,6 +298,10 @@ class Manipulator(SceneObject):
         T_origin_nextpose_cube = self.get_origin_cube(cube, data)
         curr_contact_points = self.get_contact_points(cube.object_id)
         self.get_curr_pose()
+
+        # TODO: Why does this not change anything?
+        cube.get_curr_pose()
+
         T_cube_origin = p.invertTransform(cube.curr_pos, cube.curr_orn)
         T_origin_new_cp_pos = []
         T_origin_new_cp_orn = []
@@ -382,6 +387,7 @@ class Manipulator(SceneObject):
                                                              targetPositions=self.next_info[2])
             self.move_fingers_to_pose(self.next_joint_poses, cube, abs_tol=1e-0,
                                       contact_check=False)
+            self.save_object_traj(cube)
             j += 1
 
             # # To set Marker pose -> something like this
@@ -389,6 +395,12 @@ class Manipulator(SceneObject):
             #     for pos in next_info[i]:
             #         Markers.Marker(color=[1, 0, 0]).set_marker_pose(pos)
 
+    def save_object_traj(self, cube):
+        """
+        Save the x, y, z data of cube
+        :return:
+        """
+        self.object_traj_data.append([cube.curr_pos])
 
 if __name__ == "__main__":
     pass

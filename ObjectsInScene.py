@@ -54,8 +54,8 @@ class SceneObject:
         :param data: Data line from file as a list [x, y, rotx,  f_x,f_y,f_rot_mag]
         :return:
         """
-        # self.next_pos = (data[1] * scale, data[0] * scale, self.curr_pos[2])
-        self.next_pos = (-data[1]*scale, 0.0, -data[0]*scale)
+        # self.next_pos = (-data[1]*scale, 0.0, -data[0]*scale)
+        self.next_pos = (-data[4] * scale, 0.0, -data[3] * scale)
         orn_eul = [0, radians(data[2]), 0]
         self.next_orn = p.getQuaternionFromEuler(orn_eul)
         # orn = ((1, 1, 0), radians(data[2]))

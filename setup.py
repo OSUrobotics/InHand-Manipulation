@@ -33,12 +33,31 @@ def load_object_sdf(filename):
     all_objects = p.loadSDF(filename)
     num_objs = len(all_objects)
 
-
     gripper_id = all_objects[0]
     if num_objs > 1:
         objects = []
         for i in range(1, num_objs):
             objects.append(all_objects[i])
+    else:
+        objects = None
+    return num_objs, gripper_id, objects
+
+
+def load_urdfs(filenames_list):
+    """
+    Loads all objects into the scene
+    :param filename: Name of urdf files as a list. First file is always th ehand file. Rest are object files.
+    :return: num_objs: Number of objects in the scene, including gripper
+    :return: gripper_id: Reference variable to gripper in scene(Should be the first value returned by loadSDF)
+    :return: obj_id: Reference variable to object(s) in scene
+    """
+    gripper_id = p.loadURDF(filenames_list[0], useFixedBase=True)
+
+    num_objs = len(filenames_list)
+    if num_objs > 1:
+        objects = []
+        for i in range(1, num_objs):
+            objects.append(p.loadURDF(filenames_list[i], basePosition=[0.01, 0.16, 0], useFixedBase=False))
     else:
         objects = None
     return num_objs, gripper_id, objects
@@ -56,7 +75,8 @@ def init_sim(filename=None):
     p.setGravity(0, 0, -10)
     plane_id = p.loadURDF("plane.urdf")
     if filename is not None:
-        no_of_objects, gripper_id, object_id = load_object_sdf(filename)
+        # no_of_objects, gripper_id, object_id = load_object_sdf(filename)
+        no_of_objects, gripper_id, object_id = load_urdfs(filenames_list=filename)
     else:
         no_of_objects = 0
         gripper_id = None

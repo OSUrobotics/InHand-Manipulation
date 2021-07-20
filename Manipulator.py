@@ -25,7 +25,7 @@ class Manipulator(SceneObject):
         super(Manipulator, self).__init__(self.gripper_id)
         self.joint_info = []
         self.num_joints = p.getNumJoints(self.gripper_id)
-        self.joint_indices = np.arange(1, self.num_joints)
+        self.joint_indices = None
         self.open_fingers_pose = open_fingers_pose
         self.start_grasp_pose = start_grasp_pos
         self.joint_dict = {}
@@ -57,10 +57,10 @@ class Manipulator(SceneObject):
 
         self.get_joints_info()
         for i in range(0, len(self.joint_info)):
-            if i == 0:
-                self.joint_dict_with_base.update({self.joint_info[i][1]: self.joint_info[i][0]})
-                self.key_names_list_with_base.append(self.joint_info[i][1])
-                continue
+            # if i == 0:
+            #     self.joint_dict_with_base.update({self.joint_info[i][1]: self.joint_info[i][0]})
+            #     self.key_names_list_with_base.append(self.joint_info[i][1])
+            #     continue
             self.joint_dict.update({self.joint_info[i][1]: self.joint_info[i][0]})
             self.joint_dict_with_base.update({self.joint_info[i][1]: self.joint_info[i][0]})
             self.key_names_list.append(self.joint_info[i][1])
@@ -72,12 +72,13 @@ class Manipulator(SceneObject):
                 self.prox_indices.append(i)
 
         print(self.prox_indices)
+        self.joint_indices = np.arange(self.prox_indices[0], self.num_joints)
 
-        # print("DICTIONARY CREATED:{}".format(self.joint_dict))
-        # print("DICTIONARY CREATED WITH BASE:{}".format(self.joint_dict_with_base))
-        # print("LIST CREATED:{}".format(self.key_names_list))
+        print("DICTIONARY CREATED:{}".format(self.joint_dict))
+        print("DICTIONARY CREATED WITH BASE:{}".format(self.joint_dict_with_base))
+        print("LIST CREATED:{}".format(self.key_names_list))
         print("LIST CREATED WITH BASE:{}".format(self.key_names_list_with_base))
-        # print("END EFFECTOR LIST CREATED:{}".format(self.end_effector_indices))
+        print("END EFFECTOR LIST CREATED:{}".format(self.end_effector_indices))
 
     def get_joints_info(self):
         """
@@ -87,7 +88,9 @@ class Manipulator(SceneObject):
         """
         self.joint_info = []
         for joint in range(self.num_joints):
+        # for joint in range(0, p.getNumJoints(self.gripper_id)):
             self.joint_info.append(p.getJointInfo(self.gripper_id, joint))
+        print("Joint Info: {}".format(self.joint_info))
         return self.joint_info
 
     def get_joint_angles(self):
@@ -173,8 +176,11 @@ class Manipulator(SceneObject):
         raise EnvironmentError
 
     def action_type_JA(self, action, cube):
+        # print("ACTION: {}, JOINTS: {}".format(action, self.joint_indices))
         p.setJointMotorControlArray(bodyUniqueId=self.gripper_id, jointIndices=self.joint_indices,
                                     controlMode=p.POSITION_CONTROL, targetPositions=action)
+        self.get_joint_angles()
+        print(self.curr_joint_poses)
 
     def action_type_JV(self, action, cube):
         p.setJointMotorControlArray(bodyUniqueId=self.gripper_id, jointIndices=self.joint_indices,
@@ -400,7 +406,9 @@ class Manipulator(SceneObject):
         Save the x, y, z data of cube
         :return:
         """
-        self.object_traj_data.append([cube.curr_pos])
+        cube_curr_orn_in_eul = p.getEulerFromQuaternion(cube.curr_orn)
+        self.object_traj_data.append([cube.curr_pos, cube_curr_orn_in_eul])
+
 
 if __name__ == "__main__":
     pass

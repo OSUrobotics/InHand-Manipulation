@@ -12,15 +12,19 @@ import numpy as np
 import gui
 from PyQt5.QtWidgets import QApplication
 import plot
+import csv
 
 
 def load_from_file(filename, parser, namespace):
-    parser.add_argument("--path_to_human_data", default='Human Study Data/anjali_data_better/filt_josh_2v2_c_none_1.csv')
+    parser.add_argument("--path_to_human_data",
+                        default='Human Study Data/anjali_data_better/filt_josh_2v2_c_none_1.csv')
     parser.add_argument("--plot_human_data", default="No")
     parser.add_argument("--camera_view", default="TOP")
     parser.add_argument("--path_to_gripper_sdf", default='ExampleSimWorld-Josh/new/testing2_try.sdf')
     parser.add_argument("--open_fingers_pose", action='append', type=float)
     parser.add_argument("--start_grasp_pose", action='append', type=float)
+    parser.add_argument("--path_to_gripper_urdf", default='ExampleSimWorld-Josh/2v2_test_hand_anjali/2v2_test_hand.urdf')
+    parser.add_argument("--path_to_object_urdf", default='ExampleSimWorld-Josh/2v2_test_hand_object_anjali/2v2_test_hand_cuboid_medium.urdf')
 
     with open(filename, 'r') as f:
         for line in f:
@@ -40,6 +44,16 @@ def import_arguments(args, parser):
     load_from_file(filename, parser, args)
 
 
+def save_as_csv(file, data):
+    i = 0
+    with open(file, 'w') as f:
+        f_csv = csv.writer(f)
+        f_csv.writerow(['frame', 'pitch', 'rmag', 'roll', 'tmag', 'x', 'y', 'yaw', 'z'])
+        for line in data:
+            f_csv.writerow([i, 0, line[1][0], 0, 0, line[0][0], line[0][1], 0, 0])
+            i += 1
+
+
 if __name__ == "__main__":
     # """
     # Start GUI Interface
@@ -49,7 +63,6 @@ if __name__ == "__main__":
     # interface = gui.GUI()
     # interface.show()
     # app.exec_()
-
 
     """
     Parse Arguments and start sim
@@ -61,14 +74,15 @@ if __name__ == "__main__":
     import_arguments(args, parser)
     print("ARGUMENTS PASSED: {}".format(args))
 
-
-# WITHOUT GYM:
-   # Initial arguments and setup
+    # WITHOUT GYM:
+    # Initial arguments and setup
     human_data = setup.read_file(args.path_to_human_data)
     if "Yes" in args.plot_human_data:
         print("PLOT? {}".format(args.plot_human_data))
         plot.plot_human_data(human_data)
-    (physicsClient, planeID, num_objects, gripperID, objectIDs) = setup.init_sim(args.path_to_gripper_sdf)
+    # (physicsClient, planeID, num_objects, gripperID, objectIDs) = setup.init_sim(args.path_to_gripper_sdf)
+    (physicsClient, planeID, num_objects, gripperID, objectIDs) = setup.init_sim([args.path_to_gripper_urdf,
+                                                                                  args.path_to_object_urdf])
     objectID = objectIDs[0]
     setup.set_camera_view(args.camera_view)
     gripper = Manipulator.Manipulator(gripperID, args.open_fingers_pose, args.start_grasp_pose)
@@ -84,7 +98,9 @@ if __name__ == "__main__":
 
     done_mov_obj = gripper.manipulate_object(cube, human_data, contact_check=True)
     time.sleep(2)
+    print(gripper.object_traj_data)
     plot.plot_human_and_controller_data(human_data, gripper.object_traj_data)
+    save_as_csv('controller.csv', gripper.object_traj_data)
 
 # #WITH GYM:
 #

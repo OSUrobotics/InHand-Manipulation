@@ -46,11 +46,13 @@ def import_arguments(args, parser):
 
 def save_as_csv(file, data):
     i = 0
+    start_x, start_y = data[0][0][0], data[0][0][1]
+    data[0][1][0] = 0
     with open(file, 'w') as f:
         f_csv = csv.writer(f)
         f_csv.writerow(['frame', 'pitch', 'rmag', 'roll', 'tmag', 'x', 'y', 'yaw', 'z'])
         for line in data:
-            f_csv.writerow([i, 0, line[1][0], 0, 0, line[0][0], line[0][1], 0, 0])
+            f_csv.writerow([i, 0, line[1][0], 0, 0, line[0][1] - start_y, line[0][0] - start_x, 0, 0])
             i += 1
 
 
@@ -98,7 +100,7 @@ if __name__ == "__main__":
 
     done_mov_obj = gripper.manipulate_object(cube, human_data, contact_check=True)
     time.sleep(2)
-    print(gripper.object_traj_data)
+    # print(gripper.object_traj_data)
     plot.plot_human_and_controller_data(human_data, gripper.object_traj_data)
     save_as_csv('controller.csv', gripper.object_traj_data)
 

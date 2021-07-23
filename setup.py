@@ -40,6 +40,12 @@ def load_object_sdf(filename):
             objects.append(all_objects[i])
     else:
         objects = None
+    p.changeVisualShape(gripper_id, 0, rgbaColor=[1, 0, 0, 1])
+    p.changeVisualShape(gripper_id, 1, rgbaColor=[0, 1, 0, 1])
+    p.changeVisualShape(gripper_id, 2, rgbaColor=[1, 0, 0, 1])
+    p.changeVisualShape(gripper_id, 3, rgbaColor=[0, 1, 0, 1])
+    p.changeVisualShape(gripper_id, 4, rgbaColor=[1, 0, 0, 1])
+    p.changeVisualShape(objects[0], -1, rgbaColor=[0, 0, 1, 1])
     return num_objs, gripper_id, objects
 
 
@@ -52,6 +58,12 @@ def load_urdfs(filenames_list):
     :return: obj_id: Reference variable to object(s) in scene
     """
     gripper_id = p.loadURDF(filenames_list[0], useFixedBase=True)
+    p.changeVisualShape(gripper_id, -1, rgbaColor=[0.3, 0.3, 0.3, 1])
+    p.changeVisualShape(gripper_id, 0, rgbaColor=[1, 0.5, 0, 1])
+    p.changeVisualShape(gripper_id, 1, rgbaColor=[0.3, 0.3, 0.3, 1])
+    p.changeVisualShape(gripper_id, 2, rgbaColor=[1, 0.5, 0, 1])
+    p.changeVisualShape(gripper_id, 3, rgbaColor=[0.3, 0.3, 0.3, 1])
+
 
     num_objs = len(filenames_list)
     if num_objs > 1:
@@ -60,6 +72,7 @@ def load_urdfs(filenames_list):
             objects.append(p.loadURDF(filenames_list[i], basePosition=[0.01, 0.16, 0], useFixedBase=False))
     else:
         objects = None
+    p.changeVisualShape(objects[0], -1, rgbaColor=[0, 0.75, 0.5, 1])
     return num_objs, gripper_id, objects
 
 

@@ -407,7 +407,11 @@ class Manipulator(SceneObject):
         :return:
         """
         cube_curr_orn_in_eul = p.getEulerFromQuaternion(cube.curr_orn)
-        self.object_traj_data.append([cube.curr_pos, cube_curr_orn_in_eul])
+        cube_curr_pos_x = cube.curr_pos[1]
+        cube_curr_pos_y = cube.curr_pos[0]
+        self.object_traj_data.append([[cube_curr_pos_x, cube_curr_pos_y, cube.curr_pos[2]], [cube_curr_orn_in_eul[0],
+                                                                                             cube_curr_orn_in_eul[1],
+                                                                                             cube_curr_orn_in_eul[2]]])
 
 
 if __name__ == "__main__":

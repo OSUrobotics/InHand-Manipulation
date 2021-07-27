@@ -55,7 +55,8 @@ class SceneObject:
         :return:
         """
         # self.next_pos = (-data[1]*scale, 0.0, -data[0]*scale)
-        self.next_pos = (-data[4] * scale, 0.0, -data[3] * scale)
+        # self.next_pos = (-data[4] * scale, 0.0, -data[3] * scale)
+        self.next_pos = (data[3] * scale, 0.0, data[4] * scale)
         orn_eul = [0, radians(data[2]), 0]
         self.next_orn = p.getQuaternionFromEuler(orn_eul)
         # orn = ((1, 1, 0), radians(data[2]))

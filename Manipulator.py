@@ -302,6 +302,7 @@ class Manipulator(SceneObject):
         """
 
         T_origin_nextpose_cube = self.get_origin_cube(cube, data)
+        print("NEXT POSE: {}".format(T_origin_nextpose_cube))
         curr_contact_points = self.get_contact_points(cube.object_id)
         self.get_curr_pose()
 
@@ -376,6 +377,9 @@ class Manipulator(SceneObject):
         :return: done: True if complete, False otherwise
         """
         j = 0
+        l_dist_marker = Markers.Marker()
+        # l_dist_marker.set_marker_pose(p.getLinkState(self.gripper_id, 1)[4])
+        # distal_pos = link[4])
         for line in data:
             print("ITERATION: {}".format(j))
             if j < 65:
@@ -386,11 +390,14 @@ class Manipulator(SceneObject):
                     in_contact = self.check_for_contact(cube)
                 except EnvironmentError:
                     print("We Have Lost Contact with Object. Aborting Mission")
-                    setup.quit_sim()
+                    # setup.quit_sim()
+                    break
             self.next_info = self.get_pose_in_world_origin_expert(cube, line)
             self.next_joint_poses = p.calculateInverseKinematics2(bodyUniqueId=self.gripper_id,
-                                                             endEffectorLinkIndices=self.end_effector_indices,
-                                                             targetPositions=self.next_info[2])
+                                                                  endEffectorLinkIndices=self.end_effector_indices,
+                                                                  targetPositions=self.next_info[2])
+                                                             # targetPositions=[[self.next_info[4][0][0]-cube.cube_size, self.next_info[4][0][1]-cube.cube_size, self.next_info[4][0][2]-cube.cube_size], [self.next_info[4][0][0]-cube.cube_size, self.next_info[4][0][1]-cube.cube_size, self.next_info[4][0][2]-cube.cube_size]])
+            l_dist_marker.set_marker_pose(self.next_info[2][0])
             self.move_fingers_to_pose(self.next_joint_poses, cube, abs_tol=1e-0,
                                       contact_check=False)
             self.save_object_traj(cube)
@@ -407,8 +414,8 @@ class Manipulator(SceneObject):
         :return:
         """
         cube_curr_orn_in_eul = p.getEulerFromQuaternion(cube.curr_orn)
-        cube_curr_pos_x = cube.curr_pos[1]
-        cube_curr_pos_y = cube.curr_pos[0]
+        cube_curr_pos_x = cube.curr_pos[0]
+        cube_curr_pos_y = cube.curr_pos[1]
         self.object_traj_data.append([[cube_curr_pos_x, cube_curr_pos_y, cube.curr_pos[2]], [cube_curr_orn_in_eul[0],
                                                                                              cube_curr_orn_in_eul[1],
                                                                                              cube_curr_orn_in_eul[2]]])

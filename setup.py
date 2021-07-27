@@ -69,7 +69,8 @@ def load_urdfs(filenames_list):
     if num_objs > 1:
         objects = []
         for i in range(1, num_objs):
-            objects.append(p.loadURDF(filenames_list[i], basePosition=[0.01, 0.16, 0], useFixedBase=False))
+            objects.append(p.loadURDF(filenames_list[i], basePosition=[0.0, 0.16, 0], useFixedBase=False))
+            # objects.append(p.loadURDF(filenames_list[i], basePosition=[0.01, 0.16, 0], useFixedBase=False))
     else:
         objects = None
     p.changeVisualShape(objects[0], -1, rgbaColor=[0, 0.75, 0.5, 1])
@@ -104,8 +105,8 @@ def set_camera_view(view="TOP"):
     :param view: takes two keywords ("TOP" or "SIDE")  indicative of scene view
     """
     if view == "TOP":
-        p.resetDebugVisualizerCamera(cameraDistance=.02, cameraYaw=90, cameraPitch=-89.9,
-                                     cameraTargetPosition=[0.1, 0, 0.5])
+        p.resetDebugVisualizerCamera(cameraDistance=.02, cameraYaw=0, cameraPitch=-89.9,
+                                     cameraTargetPosition=[0, 0.1, 0.5]) #cameraTargetPosition=[0.1, 0, 0.5])
     elif view == "SIDE":
         p.resetDebugVisualizerCamera(cameraDistance=.2, cameraYaw=0, cameraPitch=0, cameraTargetPosition=[.1, 0, .1])
     else:

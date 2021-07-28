@@ -52,7 +52,7 @@ def save_as_csv(file, data):
         f_csv = csv.writer(f)
         f_csv.writerow(['frame', 'pitch', 'rmag', 'roll', 'tmag', 'x', 'y', 'yaw', 'z'])
         for line in data:
-            f_csv.writerow([i, 0, line[1][0], 0, 0, line[0][1] - start_y, line[0][0] - start_x, 0, 0])
+            f_csv.writerow([i, 0, line[1][0], 0, 0, line[0][0] - start_x, line[0][1] - start_y, 0, 0])
             i += 1
 
 
@@ -82,6 +82,12 @@ if __name__ == "__main__":
     if "Yes" in args.plot_human_data:
         print("PLOT? {}".format(args.plot_human_data))
         plot.plot_human_data(human_data)
+
+    ##Only plotting pre-existing files
+    controller_data = setup.read_file('controller.csv')
+    # print("CONTROLLER DATA: {}".format(controller_data))
+    # plot.plot_human_and_controller_data_from_file(human_data, controller_data)
+    #
     # (physicsClient, planeID, num_objects, gripperID, objectIDs) = setup.init_sim(args.path_to_gripper_sdf)
     (physicsClient, planeID, num_objects, gripperID, objectIDs) = setup.init_sim([args.path_to_gripper_urdf,
                                                                                   args.path_to_object_urdf])

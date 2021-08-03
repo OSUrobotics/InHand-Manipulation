@@ -3,6 +3,8 @@
 import pybullet as p
 import setup
 import numpy as np
+import csv
+import pandas as pd
 from math import isclose, radians
 import Markers
 import time
@@ -42,6 +44,8 @@ class Manipulator(SceneObject):
         self.target_marker = Markers.Marker(color=[0, 1, 0]).set_marker_pose([0, 0, 0])
         self.cp_marker = Markers.Marker().set_marker_pose([0, 0, 0])
         self.object_traj_data = []
+        self.phase = None
+        self.save_data_dict = {}
 
 
     # def __repr__(self):
@@ -137,7 +141,7 @@ class Manipulator(SceneObject):
         for i in range(0, len(self.end_effector_indices)):
             contact_points_info = p.getContactPoints(cube_id, self.gripper_id, linkIndexB=self.end_effector_indices[i])
             try:
-                contact_points.append(contact_points_info[0][5])
+                contact_points.append(contact_points_info[0][6])
             except IndexError:
                 contact_points.append(None)
             pass
@@ -154,8 +158,6 @@ class Manipulator(SceneObject):
         in_contact = False
         for i in range(0, tot_attempts):
             target_pos = []
-            # p.stepSimulation()
-            # time.sleep(1. / 240.)
             contact_points = self.get_contact_points(cube.object_id)
             if None in contact_points:
                 # maintain contact
@@ -166,8 +168,6 @@ class Manipulator(SceneObject):
                 pose_for_contact = p.calculateInverseKinematics2(bodyUniqueId=self.gripper_id,
                                                                  endEffectorLinkIndices=self.end_effector_indices,
                                                                  targetPositions=target_pos)
-                # p.setJointMotorControlArray(bodyIndex=self.gripper_id, jointIndices=self.joint_indices,
-                #                             controlMode=p.POSITION_CONTROL, targetPositions=pose_for_contact)
                 self.step_sim(pose_for_contact, cube)
 
             else:
@@ -209,6 +209,8 @@ class Manipulator(SceneObject):
             p.stepSimulation()
             time.sleep(1. / 240.)
             self.action_type(move_to_joint_poses, cube)
+        # if cube is not None:
+        self.save_data(cube)
 
     def move_fingers_to_pose(self, joint_poses, cube=None, abs_tol=1e-05, contact_check=False):
         """
@@ -223,8 +225,6 @@ class Manipulator(SceneObject):
         done = False
 
         while p.isConnected() and not done:
-            # p.stepSimulation()
-            # time.sleep(1. / 240.)
             # Query joint angles and check if they match or are close to where we want them to be
             done = self.pose_reached(joint_poses, abs_tol)
             if contact_check:
@@ -232,10 +232,6 @@ class Manipulator(SceneObject):
                 try:
                     in_contact = self.check_for_contact(cube)
                     print("IN CONTACT? {}".format(in_contact))
-                    # p.setJointMotorControlArray(bodyIndex=self.gripper_id, jointIndices=self.joint_indices,
-                    #                             controlMode=p.POSITION_CONTROL, targetPositions=joint_poses)
-
-                    #Should we  be sending th ecube? @anjali possible error here?
                     self.step_sim(joint_poses, cube)
 
                 except EnvironmentError:
@@ -243,8 +239,6 @@ class Manipulator(SceneObject):
                     setup.quit_sim()
 
             else:
-                # p.setJointMotorControlArray(bodyIndex=self.gripper_id, jointIndices=self.joint_indices,
-                #                             controlMode=p.POSITION_CONTROL, targetPositions=joint_poses)
                 self.step_sim(joint_poses, cube)
         if cube is not None:
             contact_points = self.get_contact_points(cube.object_id)
@@ -329,8 +323,8 @@ class Manipulator(SceneObject):
                 T_origin_nextpose_cube]
 
     def get_origin_no_cp_pts(self, cube, index, T_origin_target):
-        T_origin_no_cp = p.multiplyTransforms(T_origin_target[0], T_origin_target[1], cube.start_cube_start_cp[index][0],
-                                              cube.start_cube_start_cp[index][1])
+        T_origin_no_cp = p.multiplyTransforms(T_origin_target[0], T_origin_target[1], cube.start_cube_start_cp[index][0]
+                                              ,cube.start_cube_start_cp[index][1])
         # print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@!!!!!!!!!!!!!!!!!!!!!!!!@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
         # Markers.Marker().reset_marker_pose(T_origin_no_cp[0], self.cp_marker)
         return T_origin_no_cp
@@ -359,7 +353,8 @@ class Manipulator(SceneObject):
                 T_origin_new_cp_orn.append(T_origin_new_cp[1])
                 T_origin_nl = T_origin_new_cp
             else:
-                T_origin_new_cp = self.get_origin_cp(i, cube, T_cube_origin, T_origin_nextpose_cube, curr_contact_points)
+                T_origin_new_cp = self.get_origin_cp(i, cube, T_cube_origin, T_origin_nextpose_cube,
+                                                     curr_contact_points)
                 T_origin_new_cp_pos.append(T_origin_new_cp[0])
                 T_origin_new_cp_orn.append(T_origin_new_cp[1])
                 T_origin_nl = self.get_origin_links(i, self.end_effector_indices[i], T_origin_new_cp_pos,
@@ -395,22 +390,132 @@ class Manipulator(SceneObject):
                     in_contact = self.check_for_contact(cube)
                 except EnvironmentError:
                     print("We Have Lost Contact with Object. Aborting Mission")
+                    self.save_file()
                     # setup.quit_sim()
                     break
             self.next_info = self.get_pose_in_world_origin_expert(cube, line)
             self.next_joint_poses = p.calculateInverseKinematics2(bodyUniqueId=self.gripper_id,
                                                                   endEffectorLinkIndices=self.end_effector_indices,
                                                                   targetPositions=self.next_info[2])
-                                                             # targetPositions=[[self.next_info[4][0][0]-cube.cube_size, self.next_info[4][0][1]-cube.cube_size, self.next_info[4][0][2]-cube.cube_size], [self.next_info[4][0][0]-cube.cube_size, self.next_info[4][0][1]-cube.cube_size, self.next_info[4][0][2]-cube.cube_size]])
-            l_dist_marker.set_marker_pose(self.next_info[2][0])
+            # l_dist_marker.set_marker_pose(self.next_info[2][0])
             self.move_fingers_to_pose(self.next_joint_poses, cube, abs_tol=1e-0, contact_check=False)
             self.save_object_traj(cube)
+            print("DATA DICT: {}".format(self.save_data_dict))
             j += 1
 
+        self.save_file()
             # # To set Marker pose -> something like this
             # for i in range(0, len(next_info)):
             #     for pos in next_info[i]:
             #         Markers.Marker(color=[1, 0, 0]).set_marker_pose(pos)
+
+    def save_cube_data(self, cube):
+        print("CUBE? {}:".format(cube))
+        if cube is not None:
+            cube_pose = cube.get_curr_pose()
+            cube_pos_x = cube_pose[0][0]
+            cube_pos_y = cube_pose[0][1]
+            cube_pos_z = cube_pose[0][2]
+            cube_orn = p.getEulerFromQuaternion(cube_pose[1])
+            cube_orn_x = cube_orn[0]
+            cube_orn_y = cube_orn[1]
+            cube_orn_z = cube_orn[2]
+
+        else:
+            cube_pos_x, cube_pos_y, cube_pos_z, cube_orn_x, cube_orn_y, cube_orn_z = None, None, None, None, None, None
+
+        self.add_column(column_name='Cube_Pos_X', column_data=cube_pos_x)
+        self.add_column(column_name='Cube_Pos_Y', column_data=cube_pos_y)
+        self.add_column(column_name='Cube_Pos_Z', column_data=cube_pos_z)
+        self.add_column(column_name='Cube_Orn_X', column_data=cube_orn_x)
+        self.add_column(column_name='Cube_Orn_Y', column_data=cube_orn_y)
+        self.add_column(column_name='Cube_Orn_Z', column_data=cube_orn_z)
+
+    def save_links_data(self):
+        links_info = p.getLinkStates(self.gripper_id, linkIndices=list(self.joint_dict.values()))
+        for i in range(len(self.key_names_list)):
+            link_pos_x = links_info[i][4][0]
+            link_pos_y = links_info[i][4][1]
+            link_pos_z = links_info[i][4][2]
+            link_orn = p.getEulerFromQuaternion(links_info[i][5])
+            link_orn_x = link_orn[0]
+            link_orn_y = link_orn[1]
+            link_orn_z = link_orn[2]
+            self.add_column(column_name='{}_{}'.format(self.key_names_list[i], 'link_pos_x'), column_data=link_pos_x)
+            self.add_column(column_name='{}_{}'.format(self.key_names_list[i], 'link_pos_y'), column_data=link_pos_y)
+            self.add_column(column_name='{}_{}'.format(self.key_names_list[i], 'link_pos_z'), column_data=link_pos_z)
+            self.add_column(column_name='{}_{}'.format(self.key_names_list[i], 'link_orn_x'), column_data=link_orn_x)
+            self.add_column(column_name='{}_{}'.format(self.key_names_list[i], 'link_orn_y'), column_data=link_orn_y)
+            self.add_column(column_name='{}_{}'.format(self.key_names_list[i], 'link_orn_z'), column_data=link_orn_z)
+        pass
+
+    def save_joints_data(self):
+        joints_info = p.getJointStates(self.gripper_id, jointIndices=list(self.joint_dict.values()))
+        for i in range(len(self.key_names_list)):
+            joint_angle = joints_info[i][0]
+            joint_vel = joints_info[i][1]
+            joint_react_forces = joints_info[i][2]
+            joint_motor_torque = joints_info[i][3]
+            self.add_column(column_name='{}_{}'.format(self.key_names_list[i], 'joint_angle'), column_data=joint_angle)
+            self.add_column(column_name='{}_{}'.format(self.key_names_list[i], 'joint_vel'), column_data=joint_vel)
+            self.add_column(column_name='{}_{}'.format(self.key_names_list[i], 'joint_react_forces'),
+                            column_data=joint_react_forces)
+            self.add_column(column_name='{}_{}'.format(self.key_names_list[i], 'joint_motor_torque'),
+                            column_data=joint_motor_torque)
+
+    def save_contact_data(self, cube):
+        """
+        TODO: Potential problem when more that two fingers
+        :param cube:
+        :return:
+        """
+        contact_points_info = []
+        data = []
+        if cube is not None:
+            for i in range(0, len(self.end_effector_indices)):
+                contact_points_info.append(p.getContactPoints(cube.object_id, self.gripper_id,
+                                                              linkIndexB=self.end_effector_indices[i]))
+                if len(contact_points_info[i])>0:
+                    for j in range(6, 10):
+                        data.append(contact_points_info[i][0][j])
+
+                else:
+                    for _ in range(0, 9):
+                        data.append(None)
+        else:
+            for _ in range(0, 9):
+                data.append(None)
+
+        self.add_column(column_name='contact_point_l_dist', column_data=data[0])
+        self.add_column(column_name='contact_normal_l_dist', column_data=data[1])
+        self.add_column(column_name='contact_distance_l_dist', column_data=data[2])
+        self.add_column(column_name='contact_norm_force_l_dist', column_data=data[3])
+
+        self.add_column(column_name='contact_point_r_dist', column_data=data[4])
+        self.add_column(column_name='contact_normal_r_dist', column_data=data[5])
+        self.add_column(column_name='contact_distance_r_dist', column_data=data[6])
+        self.add_column(column_name='contact_norm_force_r_dist', column_data=data[7])
+
+    def save_data(self, cube):
+        self.add_column(column_name='Phase', column_data=self.phase)
+        self.save_cube_data(cube)
+        self.save_links_data()
+        self.save_joints_data()
+        self.save_contact_data(cube)
+        pass
+
+    def add_column(self, column_name='', column_data=None):
+        if column_name not in self.save_data_dict.keys():
+            self.save_data_dict.update({column_name: [column_data]})
+        else:
+            self.save_data_dict[column_name].append(column_data)
+        pass
+
+    def save_file(self):
+        print("DICT: {}".format(self.save_data_dict))
+        df = pd.DataFrame.from_dict(self.save_data_dict)
+        print("DF {}".format(df.items))
+        df.to_csv('save_data.csv')
 
     def save_object_traj(self, cube):
         """

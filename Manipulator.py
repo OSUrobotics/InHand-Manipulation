@@ -45,7 +45,11 @@ class Manipulator(SceneObject):
         self.cp_marker = Markers.Marker().set_marker_pose([0, 0, 0])
         self.object_traj_data = []
         self.phase = None
+        self.human_data_file_name = ''
+        self.human_data = None
         self.save_data_dict = {}
+        self.only_first_entry = False
+        self.cube_subtract_from_pos = None
 
 
     # def __repr__(self):
@@ -298,7 +302,7 @@ class Manipulator(SceneObject):
         """
 
         T_origin_nextpose_cube = self.get_origin_cube(cube, data)
-        print("NEXT POSE: {}".format(T_origin_nextpose_cube))
+        # print("NEXT POSE: {}".format(T_origin_nextpose_cube))
         curr_contact_points = self.get_contact_points(cube.object_id)
         self.get_curr_pose()
 
@@ -399,8 +403,8 @@ class Manipulator(SceneObject):
                                                                   targetPositions=self.next_info[2])
             # l_dist_marker.set_marker_pose(self.next_info[2][0])
             self.move_fingers_to_pose(self.next_joint_poses, cube, abs_tol=1e-0, contact_check=False)
-            self.save_object_traj(cube)
-            print("DATA DICT: {}".format(self.save_data_dict))
+            # self.save_object_traj(cube)
+            # print("DATA DICT: {}".format(self.save_data_dict))
             j += 1
 
         self.save_file()
@@ -409,27 +413,36 @@ class Manipulator(SceneObject):
             #     for pos in next_info[i]:
             #         Markers.Marker(color=[1, 0, 0]).set_marker_pose(pos)
 
+    def save_human_data(self, cube):
+        if self.phase is 'Move':
+            pos = cube.next_pos
+            quat_orn = cube.next_orn
+            if quat_orn is not None:
+                orn = p.getEulerFromQuaternion(quat_orn)
+            else:
+                orn = None
+        else:
+            pos = None
+            orn = None
+        self.add_column(column_name='human_cube_pos', column_data=pos)
+        self.add_column(column_name='human_cube_orn', column_data=orn)
+
     def save_cube_data(self, cube):
-        print("CUBE? {}:".format(cube))
+        # print("CUBE? {}:".format(cube))
         if cube is not None:
             cube_pose = cube.get_curr_pose()
-            cube_pos_x = cube_pose[0][0]
-            cube_pos_y = cube_pose[0][1]
-            cube_pos_z = cube_pose[0][2]
+            cube_pos = cube_pose[0]
             cube_orn = p.getEulerFromQuaternion(cube_pose[1])
-            cube_orn_x = cube_orn[0]
-            cube_orn_y = cube_orn[1]
-            cube_orn_z = cube_orn[2]
+
+            if not self.only_first_entry and self.phase is 'Move':
+                self.cube_subtract_from_pos = cube_pose[0]
+                self.only_first_entry = True
 
         else:
-            cube_pos_x, cube_pos_y, cube_pos_z, cube_orn_x, cube_orn_y, cube_orn_z = None, None, None, None, None, None
+            cube_pos, cube_orn = None, None
 
-        self.add_column(column_name='Cube_Pos_X', column_data=cube_pos_x)
-        self.add_column(column_name='Cube_Pos_Y', column_data=cube_pos_y)
-        self.add_column(column_name='Cube_Pos_Z', column_data=cube_pos_z)
-        self.add_column(column_name='Cube_Orn_X', column_data=cube_orn_x)
-        self.add_column(column_name='Cube_Orn_Y', column_data=cube_orn_y)
-        self.add_column(column_name='Cube_Orn_Z', column_data=cube_orn_z)
+        self.add_column(column_name='Cube_Pos', column_data=cube_pos)
+        self.add_column(column_name='Cube_Orn', column_data=cube_orn)
 
     def save_links_data(self):
         links_info = p.getLinkStates(self.gripper_id, linkIndices=list(self.joint_dict.values()))
@@ -441,13 +454,12 @@ class Manipulator(SceneObject):
             link_orn_x = link_orn[0]
             link_orn_y = link_orn[1]
             link_orn_z = link_orn[2]
-            self.add_column(column_name='{}_{}'.format(self.key_names_list[i], 'link_pos_x'), column_data=link_pos_x)
-            self.add_column(column_name='{}_{}'.format(self.key_names_list[i], 'link_pos_y'), column_data=link_pos_y)
-            self.add_column(column_name='{}_{}'.format(self.key_names_list[i], 'link_pos_z'), column_data=link_pos_z)
-            self.add_column(column_name='{}_{}'.format(self.key_names_list[i], 'link_orn_x'), column_data=link_orn_x)
-            self.add_column(column_name='{}_{}'.format(self.key_names_list[i], 'link_orn_y'), column_data=link_orn_y)
-            self.add_column(column_name='{}_{}'.format(self.key_names_list[i], 'link_orn_z'), column_data=link_orn_z)
-        pass
+            self.add_column(column_name='{}_{}'.format(self.key_names_list[i], 'link_pos'), column_data=[link_pos_x,
+                                                                                                         link_pos_y,
+                                                                                                         link_pos_z])
+            self.add_column(column_name='{}_{}'.format(self.key_names_list[i], 'link_orn'), column_data=[link_orn_x,
+                                                                                                         link_orn_y,
+                                                                                                         link_orn_z])
 
     def save_joints_data(self):
         joints_info = p.getJointStates(self.gripper_id, jointIndices=list(self.joint_dict.values()))
@@ -471,38 +483,63 @@ class Manipulator(SceneObject):
         """
         contact_points_info = []
         data = []
+        in_contact = []
         if cube is not None:
             for i in range(0, len(self.end_effector_indices)):
                 contact_points_info.append(p.getContactPoints(cube.object_id, self.gripper_id,
                                                               linkIndexB=self.end_effector_indices[i]))
+                if i == 0:
+                    start, end = 0, 4
+                elif i == 1:
+                    start, end = 4, 8
+                else:
+                    raise IndexError
+
                 if len(contact_points_info[i])>0:
                     for j in range(6, 10):
                         data.append(contact_points_info[i][0][j])
+                    in_contact.append(True)
 
                 else:
-                    for _ in range(0, 9):
+                    for _ in range(start, end):
                         data.append(None)
-        else:
-            for _ in range(0, 9):
-                data.append(None)
+                    in_contact.append(False)
 
+        else:
+            for _ in range(0, 8):
+                data.append(None)
+            in_contact = [False, False]
+
+        self.add_column(column_name='in_contact_l', column_data=in_contact[0])
         self.add_column(column_name='contact_point_l_dist', column_data=data[0])
         self.add_column(column_name='contact_normal_l_dist', column_data=data[1])
         self.add_column(column_name='contact_distance_l_dist', column_data=data[2])
         self.add_column(column_name='contact_norm_force_l_dist', column_data=data[3])
 
+        self.add_column(column_name='in_contact_r', column_data=in_contact[1])
         self.add_column(column_name='contact_point_r_dist', column_data=data[4])
         self.add_column(column_name='contact_normal_r_dist', column_data=data[5])
         self.add_column(column_name='contact_distance_r_dist', column_data=data[6])
         self.add_column(column_name='contact_norm_force_r_dist', column_data=data[7])
 
+    def get_cube_in_start_pos(self, cube):
+        if self.phase is 'Move' and self.cube_subtract_from_pos is not None:
+            cube_curr_pos = cube.get_curr_pose()[0]
+            new_pos = [cube_curr_pos[0] - self.cube_subtract_from_pos[0],
+                       cube_curr_pos[1] - self.cube_subtract_from_pos[1],
+                       cube_curr_pos[2] - self.cube_subtract_from_pos[2]]
+        else:
+            new_pos = None
+        self.add_column(column_name='Cube_pos_in_start_pos', column_data=new_pos)
+
     def save_data(self, cube):
         self.add_column(column_name='Phase', column_data=self.phase)
+        self.save_human_data(cube)
         self.save_cube_data(cube)
+        self.get_cube_in_start_pos(cube)
         self.save_links_data()
         self.save_joints_data()
         self.save_contact_data(cube)
-        pass
 
     def add_column(self, column_name='', column_data=None):
         if column_name not in self.save_data_dict.keys():
@@ -515,7 +552,7 @@ class Manipulator(SceneObject):
         print("DICT: {}".format(self.save_data_dict))
         df = pd.DataFrame.from_dict(self.save_data_dict)
         print("DF {}".format(df.items))
-        df.to_csv('save_data.csv')
+        df.to_csv('AnalyseData/Data/' + self.human_data_file_name + '_save_data.csv')
 
     def save_object_traj(self, cube):
         """

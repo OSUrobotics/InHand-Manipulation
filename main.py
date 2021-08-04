@@ -76,6 +76,9 @@ if __name__ == "__main__":
     import_arguments(args, parser)
     print("ARGUMENTS PASSED: {}".format(args))
 
+    parse_file_name = args.path_to_human_data.split('/')[2].split('.')[0]
+    # print("$$$$", parse_file_name)
+
     # WITHOUT GYM:
     # Initial arguments and setup
     human_data = setup.read_file(args.path_to_human_data)
@@ -98,6 +101,8 @@ if __name__ == "__main__":
 
     # Moving code
     gripper.phase = 'Open'
+    gripper.human_data_file_name = parse_file_name
+    gripper.human_data = human_data
     done_open, _ = gripper.move_fingers_to_pose(gripper.open_fingers_pose, abs_tol=0.1)
     print("Complete Open? {}".format(done_open))
     p.resetBasePositionAndOrientation(objectID, cube.start_pos, cube.start_orn)
@@ -110,8 +115,8 @@ if __name__ == "__main__":
     done_mov_obj = gripper.manipulate_object(cube, human_data, contact_check=True)
     time.sleep(2)
     # print(gripper.object_traj_data)
-    plot.plot_human_and_controller_data(human_data, gripper.object_traj_data)
-    save_as_csv('controller.csv', gripper.object_traj_data)
+    # plot.plot_human_and_controller_data(human_data, gripper.object_traj_data)
+    # save_as_csv('controller.csv', gripper.object_traj_data)
 
 # #WITH GYM:
 #

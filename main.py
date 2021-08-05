@@ -11,14 +11,13 @@ import gym_env_files
 import numpy as np
 import gui
 from PyQt5.QtWidgets import QApplication
-import plot
+# import plot
 import csv
 
 
 def load_from_file(filename, parser, namespace):
     parser.add_argument("--path_to_human_data",
                         default='Human Study Data/anjali_data_better/filt_josh_2v2_c_none_1.csv')
-    parser.add_argument("--plot_human_data", default="No")
     parser.add_argument("--camera_view", default="TOP")
     parser.add_argument("--path_to_gripper_sdf", default='ExampleSimWorld-Josh/new/testing2_try.sdf')
     parser.add_argument("--open_fingers_pose", action='append', type=float)
@@ -42,18 +41,6 @@ def import_arguments(args, parser):
     with open('setup.txt', 'r') as f:
         filename = f.read()
     load_from_file(filename, parser, args)
-
-
-def save_as_csv(file, data):
-    i = 0
-    start_x, start_y = data[0][0][0], data[0][0][1]
-    data[0][1][0] = 0
-    with open(file, 'w') as f:
-        f_csv = csv.writer(f)
-        f_csv.writerow(['frame', 'pitch', 'rmag', 'roll', 'tmag', 'x', 'y', 'yaw', 'z'])
-        for line in data:
-            f_csv.writerow([i, 0, line[1][0], 0, 0, line[0][0] - start_x, line[0][1] - start_y, 0, 0])
-            i += 1
 
 
 if __name__ == "__main__":
@@ -82,11 +69,11 @@ if __name__ == "__main__":
     # WITHOUT GYM:
     # Initial arguments and setup
     human_data = setup.read_file(args.path_to_human_data)
-    if "Yes" in args.plot_human_data:
-        print("PLOT? {}".format(args.plot_human_data))
-        plot.plot_human_data(human_data)
+    # if "Yes" in args.plot_human_data:
+    #     print("PLOT? {}".format(args.plot_human_data))
+    #     plot.plot_human_data(human_data)
 
-    ##Only plotting pre-existing files
+    # # Only plotting pre-existing files
     controller_data = setup.read_file('controller.csv')
     # print("CONTROLLER DATA: {}".format(controller_data))
     # plot.plot_human_and_controller_data_from_file(human_data, controller_data)
@@ -114,9 +101,7 @@ if __name__ == "__main__":
     gripper.phase = 'Move'
     done_mov_obj = gripper.manipulate_object(cube, human_data, contact_check=True)
     time.sleep(2)
-    # print(gripper.object_traj_data)
     # plot.plot_human_and_controller_data(human_data, gripper.object_traj_data)
-    # save_as_csv('controller.csv', gripper.object_traj_data)
 
 # #WITH GYM:
 #

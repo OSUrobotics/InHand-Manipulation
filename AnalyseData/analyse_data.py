@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import csv
 
 
 def find_data_with_other_col(dataframe, col_to_find_with, equality, col_to_find_in):
@@ -12,6 +13,11 @@ def add_column(data_dict, column_name, column_data):
     return data_dict
 
 
+def convert_string_list_to_list_float(df, strip):
+    new_df = df.apply(lambda s: [float(x.strip(strip)) for x in s.split(',')])
+    return new_df
+
+
 def euc_dist_calc(pos_col):
     first_val = pos_col.iloc[0]
     print("First: {}".format(first_val))
@@ -22,7 +28,7 @@ def euc_dist_calc(pos_col):
         strip = ' ()'
     else:
         raise SyntaxError
-    pos_col = pos_col.apply(lambda s: [float(x.strip(strip)) for x in s.split(',')])
+    pos_col = convert_string_list_to_list_float(pos_col, strip=strip)
     prev_vals = np.asarray(pos_col.iloc[0])
     euc_dist = []
     for values in pos_col:
@@ -36,11 +42,8 @@ def euc_dist_calc(pos_col):
     return euc_dist, euc_dist_avg, pos_col
 
 
-if __name__ == '__main__':
-    saved_data_file_name = 'AnalyseData/Data/filt_josh_2v2_g_none_1_kpNone_kdNone_dp1_step1_save_data.csv'
+def get_stats(df):
     analysis_dict = {}
-    df = pd.read_csv(saved_data_file_name)
-    print(df.head())
 
     # Left Proximal Joint Angle and Velocties
     ja_l_prox = find_data_with_other_col(df, 'Phase', 'Move', "b'l_prox_pin'_joint_angle")
@@ -71,16 +74,21 @@ if __name__ == '__main__':
     jv_avg_r_distal = jv_r_distal.mean()
 
     # Add to dictionary
-    add_column(analysis_dict, column_name='JA_diff_l_prox_{}'.format(ja_diff_avg_l_prox), column_data=ja_diff_l_prox)
-    add_column(analysis_dict, column_name='JV_l_prox_{}'.format(jv_avg_l_prox), column_data=jv_l_prox)
+    add_column(analysis_dict, column_name='JA_diff_l_prox_{}'.format(ja_diff_avg_l_prox),
+               column_data=ja_diff_l_prox)
+    add_column(analysis_dict, column_name='JV_l_prox_{}'.format(jv_avg_l_prox),
+               column_data=jv_l_prox)
 
-    add_column(analysis_dict, column_name='JA_diff_r_prox_{}'.format(ja_diff_avg_r_prox), column_data=ja_diff_r_prox)
+    add_column(analysis_dict, column_name='JA_diff_r_prox_{}'.format(ja_diff_avg_r_prox),
+               column_data=ja_diff_r_prox)
     add_column(analysis_dict, column_name='JV_r_prox_{}'.format(jv_avg_r_prox), column_data=jv_r_prox)
 
-    add_column(analysis_dict, column_name='JA_diff_l_distal_{}'.format(ja_diff_avg_l_distal), column_data=ja_diff_l_distal)
+    add_column(analysis_dict, column_name='JA_diff_l_distal_{}'.format(ja_diff_avg_l_distal),
+               column_data=ja_diff_l_distal)
     add_column(analysis_dict, column_name='JV_l_distal_{}'.format(jv_avg_l_distal), column_data=jv_l_distal)
 
-    add_column(analysis_dict, column_name='JA_diff_r_distal_{}'.format(ja_diff_avg_r_distal), column_data=ja_diff_r_distal)
+    add_column(analysis_dict, column_name='JA_diff_r_distal_{}'.format(ja_diff_avg_r_distal),
+               column_data=ja_diff_r_distal)
     add_column(analysis_dict, column_name='JV_r_distal_{}'.format(jv_avg_r_distal), column_data=jv_r_distal)
 
     # Calculate euclidean distance between two consecutive positions
@@ -101,10 +109,14 @@ if __name__ == '__main__':
     link_pos_r_distal = find_data_with_other_col(df, 'Phase', 'Move', "b'r_distal_pin'_link_pos")
     euc_dist_r_distal, euc_dist_avg_r_distal, link_pos_r_distal = euc_dist_calc(link_pos_r_distal)
 
-    add_column(analysis_dict, column_name='EUC_dist_l_prox_{}'.format(euc_dist_avg_l_prox), column_data=euc_dist_l_prox)
-    add_column(analysis_dict, column_name='EUC_dist_l_distal_{}'.format(euc_dist_avg_l_distal), column_data=euc_dist_l_distal)
-    add_column(analysis_dict, column_name='EUC_dist_r_prox_{}'.format(euc_dist_avg_r_prox), column_data=euc_dist_r_prox)
-    add_column(analysis_dict, column_name='EUC_dist_r_distal_{}'.format(euc_dist_avg_r_distal), column_data=euc_dist_r_distal)
+    add_column(analysis_dict, column_name='EUC_dist_l_prox_{}'.format(euc_dist_avg_l_prox),
+               column_data=euc_dist_l_prox)
+    add_column(analysis_dict, column_name='EUC_dist_l_distal_{}'.format(euc_dist_avg_l_distal),
+               column_data=euc_dist_l_distal)
+    add_column(analysis_dict, column_name='EUC_dist_r_prox_{}'.format(euc_dist_avg_r_prox),
+               column_data=euc_dist_r_prox)
+    add_column(analysis_dict, column_name='EUC_dist_r_distal_{}'.format(euc_dist_avg_r_distal),
+               column_data=euc_dist_r_distal)
 
     # Cube Position of Controller
     cube_pos_controller = find_data_with_other_col(df, 'Phase', 'Move', 'Cube_Pos')
@@ -116,11 +128,45 @@ if __name__ == '__main__':
     cube_pos_human = cube_pos_human.fillna('(0.0, 0.0, 0.0)')
     euc_dist_cube_human, euc_dist_avg_cube_human, cube_pos_human = euc_dist_calc(cube_pos_human)
 
-    add_column(analysis_dict, column_name='EUC_dist_cube_controller_{}'.format(euc_dist_avg_cube_controller), column_data=euc_dist_cube_controller)
-    add_column(analysis_dict, column_name='EUC_dist_cube_human_{}'.format(euc_dist_avg_cube_human), column_data=euc_dist_cube_human)
+    add_column(analysis_dict, column_name='EUC_dist_cube_controller_{}'.format(euc_dist_avg_cube_controller),
+               column_data=euc_dist_cube_controller)
+    add_column(analysis_dict, column_name='EUC_dist_cube_human_{}'.format(euc_dist_avg_cube_human),
+               column_data=euc_dist_cube_human)
 
     print(analysis_dict.keys())
 
     df_new = pd.DataFrame.from_dict(analysis_dict)
     # print("DF {}".format(df_new.items))
     df_new.to_csv('AnalyseData/Data/'+ 'new_data.csv')
+
+
+def get_data_in_johns_format(df):
+    controller_cube_pos = find_data_with_other_col(df, 'Phase', 'Move', "Cube_pos_in_start_pos")
+    controller_cube_orn = find_data_with_other_col(df, 'Phase', 'Move', "Cube_Orn")
+    controller_cube_pos = convert_string_list_to_list_float(controller_cube_pos, ' []')
+    controller_cube_orn = convert_string_list_to_list_float(controller_cube_orn, ' ()')
+    list_df = pd.concat([controller_cube_pos, controller_cube_orn], axis=1)
+    list_data = list_df.values.tolist()
+    return list_data
+
+
+def get_csv_in_johns_format(data):
+    file = 'AnalyseData/Data/controller_2v2_g_n_1.csv'
+    i = 0
+    start_x, start_y = data[0][0][0], data[0][0][1]
+    data[0][1][0] = 0
+    with open(file, 'w') as f:
+        f_csv = csv.writer(f)
+        f_csv.writerow(['frame', 'pitch', 'rmag', 'roll', 'tmag', 'x', 'y', 'yaw', 'z'])
+        for line in data:
+            f_csv.writerow([i, 0, line[1][0], 0, 0, line[0][0] - start_x, line[0][1] - start_y, 0, 0])
+            i += 1
+
+
+if __name__ == '__main__':
+    saved_data_file_name = 'AnalyseData/Data/filt_josh_2v2_g_none_1_kpNone_kdNone_dp1_step1_save_data.csv'
+    saved_df = pd.read_csv(saved_data_file_name)
+
+    get_stats(saved_df)
+    data_in_johns_format = get_data_in_johns_format(saved_df)
+    get_csv_in_johns_format(data_in_johns_format)

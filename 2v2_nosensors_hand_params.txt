@@ -10,6 +10,5 @@
 --start_grasp_pose=-0.6
 --start_grasp_pose=0.9
 --path_to_gripper_sdf=ExampleSimWorld-Josh/2v2_hands/999/testing.sdf
---plot_human_data=No
 --path_to_gripper_urdf=ExampleSimWorld-Josh/2v2_nosensors_hand/2v2_nosensors.urdf
 --path_to_object_urdf=ExampleSimWorld-Josh/2v2_nosensors_hand_object/2v2_nosensors_cuboid_small.urdf

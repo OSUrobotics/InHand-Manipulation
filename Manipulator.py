@@ -406,9 +406,7 @@ class Manipulator(SceneObject):
         # distal_pos = link[4])
         for line in data:
             print("ITERATION: {}".format(j))
-            # if j < limit_data:
             if j % self.limit_data != 0:
-                # self.save_object_traj(cube)
                 j += 1
                 continue
             if contact_check:
@@ -425,8 +423,6 @@ class Manipulator(SceneObject):
                                                                   targetPositions=self.next_info[2])
             # l_dist_marker.set_marker_pose(self.next_info[2][0])
             self.move_fingers_to_pose(self.next_joint_poses, cube, abs_tol=1e-0, contact_check=False)
-            # self.save_object_traj(cube)
-            # print("DATA DICT: {}".format(self.save_data_dict))
             j += 1
 
         self.save_file()
@@ -575,19 +571,6 @@ class Manipulator(SceneObject):
         df = pd.DataFrame.from_dict(self.save_data_dict)
         print("DF {}".format(df.items))
         df.to_csv('AnalyseData/Data/' + self.human_data_file_name + '_kp{}_kd{}_dp{}_step{}'.format(self.k_p, self.k_d, self.limit_data, self.ep_step) +'_save_data.csv')
-
-    def save_object_traj(self, cube):
-        """
-        Save the x, y, z data of cube
-        :return:
-        """
-        cube.get_curr_pose()
-        cube_curr_orn_in_eul = p.getEulerFromQuaternion(cube.curr_orn)
-        cube_curr_pos_x = cube.curr_pos[0]
-        cube_curr_pos_y = cube.curr_pos[1]
-        self.object_traj_data.append([[cube_curr_pos_x, cube_curr_pos_y, cube.curr_pos[2]], [cube_curr_orn_in_eul[0],
-                                                                                             cube_curr_orn_in_eul[1],
-                                                                                             cube_curr_orn_in_eul[2]]])
 
 
 if __name__ == "__main__":

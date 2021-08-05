@@ -14,6 +14,8 @@ def add_column(data_dict, column_name, column_data):
 
 def euc_dist_calc(pos_col):
     first_val = pos_col.iloc[0]
+    print("First: {}".format(first_val))
+    print("!!!!#### POS: {}".format(pos_col))
     if '[' in first_val:
         strip = ' []'
     elif '(' in first_val:
@@ -35,7 +37,7 @@ def euc_dist_calc(pos_col):
 
 
 if __name__ == '__main__':
-    saved_data_file_name = 'AnalyseData/Data/filt_josh_2v2_g_none_1_save_data.csv'
+    saved_data_file_name = 'AnalyseData/Data/filt_josh_2v2_g_none_1_kpNone_kdNone_dp1_step1_save_data.csv'
     analysis_dict = {}
     df = pd.read_csv(saved_data_file_name)
     print(df.head())
@@ -110,16 +112,12 @@ if __name__ == '__main__':
 
     # Cube Position of Human
     cube_pos_human = find_data_with_other_col(df, 'Phase', 'Move', 'human_cube_pos')
-    cube_pos_human.iloc[0] = '(0.0, 0.0, 0.0)'
+    # cube_pos_human.iloc[0] = '(0.0, 0.0, 0.0)'
+    cube_pos_human = cube_pos_human.fillna('(0.0, 0.0, 0.0)')
     euc_dist_cube_human, euc_dist_avg_cube_human, cube_pos_human = euc_dist_calc(cube_pos_human)
 
     add_column(analysis_dict, column_name='EUC_dist_cube_controller_{}'.format(euc_dist_avg_cube_controller), column_data=euc_dist_cube_controller)
     add_column(analysis_dict, column_name='EUC_dist_cube_human_{}'.format(euc_dist_avg_cube_human), column_data=euc_dist_cube_human)
-
-    # print("DICT: {}".format(analysis_dict))
-
-    # print("All Lenghts:", len(ja_diff_l_prox), len(jv_l_distal), len(link_pos_r_prox), len(link_pos_r_distal),
-    #       len(cube_pos_controller), len(cube_pos_human), len(euc_dist_l_prox))
 
     print(analysis_dict.keys())
 

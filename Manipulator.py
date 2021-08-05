@@ -38,7 +38,7 @@ class Manipulator(SceneObject):
         self.prev_cp = None
         self.prox_indices = []
         self.create_joint_dict(key_names)
-        self.next_info= None
+        self.next_info = None
         self.next_joint_poses = None
         self.action_type = self.action_type_JA
         self.target_marker = Markers.Marker(color=[0, 1, 0]).set_marker_pose([0, 0, 0])
@@ -50,7 +50,11 @@ class Manipulator(SceneObject):
         self.save_data_dict = {}
         self.only_first_entry = False
         self.cube_subtract_from_pos = None
-
+        self.set_pid = False
+        self.k_p = None
+        self.k_d = None
+        self.ep_step = 1
+        self.limit_data = 1
 
     # def __repr__(self):
     #     return "This Gripper has {} joints called {}".format(self.num_joints, self.joint_dict_with_base.keys())
@@ -64,6 +68,7 @@ class Manipulator(SceneObject):
         """
 
         self.get_joints_info()
+
         for i in range(0, len(self.joint_info)):
             # if i == 0:
             #     self.joint_dict_with_base.update({self.joint_info[i][1]: self.joint_info[i][0]})
@@ -96,7 +101,7 @@ class Manipulator(SceneObject):
         """
         self.joint_info = []
         for joint in range(self.num_joints):
-        # for joint in range(0, p.getNumJoints(self.gripper_id)):
+            # for joint in range(0, p.getNumJoints(self.gripper_id)):
             self.joint_info.append(p.getJointInfo(self.gripper_id, joint))
         print("Joint Info: {}".format(self.joint_info))
         return self.joint_info
@@ -181,8 +186,26 @@ class Manipulator(SceneObject):
 
     def action_type_JA(self, action, cube):
         # print("ACTION: {}, JOINTS: {}".format(action, self.joint_indices))
-        p.setJointMotorControlArray(bodyUniqueId=self.gripper_id, jointIndices=self.joint_indices,
-                                    controlMode=p.POSITION_CONTROL, targetPositions=action)
+        if not self.set_pid:
+            p.setJointMotorControlArray(bodyUniqueId=self.gripper_id, jointIndices=self.joint_indices,
+                                        controlMode=p.POSITION_CONTROL, targetPositions=action)
+        else:
+            if self.k_p is not None and self.k_d is None:
+                p.setJointMotorControlArray(bodyUniqueId=self.gripper_id, jointIndices=self.joint_indices,
+                                            controlMode=p.POSITION_CONTROL, targetPositions=action,
+                                            positionGains=self.k_p)
+            elif self.k_p is None and self.k_d is not None:
+                p.setJointMotorControlArray(bodyUniqueId=self.gripper_id, jointIndices=self.joint_indices,
+                                            controlMode=p.POSITION_CONTROL, targetPositions=action,
+                                            velocityGains=self.k_d)
+            elif self.k_p is not None and self.k_d is not None:
+                p.setJointMotorControlArray(bodyUniqueId=self.gripper_id, jointIndices=self.joint_indices,
+                                            controlMode=p.POSITION_CONTROL, targetPositions=action,
+                                            positionGains=self.k_p, velocityGains=self.k_d)
+            else:
+                print("###!!! Forgot to set pid values!!!###")
+                raise ValueError
+
         self.get_joint_angles()
         # print(self.curr_joint_poses)
 
@@ -208,8 +231,8 @@ class Manipulator(SceneObject):
         :param move_to_joint_poses:
         :return:
         """
-        ep_step = 5
-        for i in range(0, ep_step):
+
+        for i in range(0, self.ep_step):
             p.stepSimulation()
             time.sleep(1. / 240.)
             self.action_type(move_to_joint_poses, cube)
@@ -271,7 +294,7 @@ class Manipulator(SceneObject):
         """
         T_cube_cp = p.multiplyTransforms(T_cube_origin[0], T_cube_origin[1], curr_contact_points[i], self.curr_orn)
         T_origin_new_cp = p.multiplyTransforms(T_origin_nextpose_cube[0], T_origin_nextpose_cube[1],
-                                           T_cube_cp[0], T_cube_cp[1])
+                                               T_cube_cp[0], T_cube_cp[1])
 
         return T_origin_new_cp
 
@@ -328,7 +351,7 @@ class Manipulator(SceneObject):
 
     def get_origin_no_cp_pts(self, cube, index, T_origin_target):
         T_origin_no_cp = p.multiplyTransforms(T_origin_target[0], T_origin_target[1], cube.start_cube_start_cp[index][0]
-                                              ,cube.start_cube_start_cp[index][1])
+                                              , cube.start_cube_start_cp[index][1])
         # print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@!!!!!!!!!!!!!!!!!!!!!!!!@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
         # Markers.Marker().reset_marker_pose(T_origin_no_cp[0], self.cp_marker)
         return T_origin_no_cp
@@ -378,15 +401,14 @@ class Manipulator(SceneObject):
         :return: done: True if complete, False otherwise
         """
         j = 0
-        limit_data = 5
         l_dist_marker = Markers.Marker()
         # l_dist_marker.set_marker_pose(p.getLinkState(self.gripper_id, 1)[4])
         # distal_pos = link[4])
         for line in data:
             print("ITERATION: {}".format(j))
             # if j < limit_data:
-            if j%limit_data != 0:
-                self.save_object_traj(cube)
+            if j % self.limit_data != 0:
+                # self.save_object_traj(cube)
                 j += 1
                 continue
             if contact_check:
@@ -408,10 +430,10 @@ class Manipulator(SceneObject):
             j += 1
 
         self.save_file()
-            # # To set Marker pose -> something like this
-            # for i in range(0, len(next_info)):
-            #     for pos in next_info[i]:
-            #         Markers.Marker(color=[1, 0, 0]).set_marker_pose(pos)
+        # # To set Marker pose -> something like this
+        # for i in range(0, len(next_info)):
+        #     for pos in next_info[i]:
+        #         Markers.Marker(color=[1, 0, 0]).set_marker_pose(pos)
 
     def save_human_data(self, cube):
         if self.phase is 'Move':
@@ -495,7 +517,7 @@ class Manipulator(SceneObject):
                 else:
                     raise IndexError
 
-                if len(contact_points_info[i])>0:
+                if len(contact_points_info[i]) > 0:
                     for j in range(6, 10):
                         data.append(contact_points_info[i][0][j])
                     in_contact.append(True)
@@ -552,7 +574,7 @@ class Manipulator(SceneObject):
         print("DICT: {}".format(self.save_data_dict))
         df = pd.DataFrame.from_dict(self.save_data_dict)
         print("DF {}".format(df.items))
-        df.to_csv('AnalyseData/Data/' + self.human_data_file_name + '_save_data.csv')
+        df.to_csv('AnalyseData/Data/' + self.human_data_file_name + '_kp{}_kd{}_dp{}_step{}'.format(self.k_p, self.k_d, self.limit_data, self.ep_step) +'_save_data.csv')
 
     def save_object_traj(self, cube):
         """

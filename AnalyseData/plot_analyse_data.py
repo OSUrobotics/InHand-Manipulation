@@ -1,109 +1,81 @@
 #!/usr/bin/env python3
 
 import matplotlib.pyplot as plt
+import analyse_data
+import numpy as np
 
 
-def plot_human_data(data):
+def get_data(df, find_in, strip_out):
+    find_col = analyse_data.find_data_with_other_col(saved_df, 'Phase', 'Move', find_in)
+    find_col = find_col.fillna(find_col.loc[find_col.first_valid_index()])
+    find_col_list = analyse_data.convert_string_list_to_list_float(find_col, strip_out)
+    return find_col_list
+
+
+def plot_single_data(df, x = 0, y = 1, scale=1.0):
     x_data = []
     y_data = []
-    scale = 0.1
-    for line in data:
-        x_data.append(scale*line[3])
-        y_data.append(scale*line[4])
+    for line in df:
+        x_data.append(scale*line[x])
+        y_data.append(scale*line[y])
     # print("DATA 0: {},\n DATA 1: {},\n DATA: {}".format(data[:][0], data[1], data))
     plt.plot(x_data, y_data)
-    plt.show()
 
 
-def plot_human_and_controller_data(human_data, controller_data):
+def plot_expected_data(dir):
     """
-    Plot the human study data and controller data side by side.
-    :param human_data: x,y position of data from human study
-    :param controller_data: x,y position of expert controller
+    TODO: Fix this so that amount in direction reflects handspan
+    :param dir:
     :return:
     """
-    x_data_human = []
-    y_data_human = []
-
-    x_data_controller = []
-    y_data_controller = []
-
-    scale = 0.1
-    for line in human_data:
-        x_data_human.append(scale*line[3])
-        y_data_human.append(scale*line[4])
-    # print("DATA 0: {},\n DATA 1: {},\n DATA: {}".format(data[:][0], data[1], data))
-    # plt.plot(x_data_human, y_data_human)
-    plt.scatter(x_data_human, y_data_human)
-
-    # y_data_first_controller = controller_data[0][0][0]
-    # x_data_first_controller = controller_data[0][0][1]
-    x_data_first_controller = controller_data[0][0][0]
-    y_data_first_controller = controller_data[0][0][1]
-    for line in controller_data:
-        # print("LINE: {} {}".format(line[0][0], line[0][1]))
-        x_data_controller.append(line[0][0] - x_data_first_controller)
-        y_data_controller.append(line[0][1] - y_data_first_controller)
-    # print("DATA 0: {},\n DATA 1: {}".format(len(human_data), len(controller_data)))
-    # plt.plot(x_data_controller, y_data_controller)
-    plt.scatter(x_data_controller, y_data_controller)
-
-    plt.show()
+    if dir == 'g':
+        plt.plot([0, -0.05], [0, 0])
 
 
-def plot_human_and_controller_data_from_file(human_data, controller_data):
+def plot_multiple_data(data,labels, title, dir, save=False, filename=''):
     """
-    Plot the human study data and controller data side by side.
-    :param human_data: x,y position of data from human study
-    :param controller_data: x,y position of expert controller
+    Data should be a list of list of 5 elements:
+    First 4 are the inputs of "plot_single_data" function. 5th element is the legend to be applied
+    :param data:
+    :param labels: list of label names for x and y, respectively
+    :param title: Title of the plot
+    :param dir: Direction of asterisk test data
     :return:
     """
-    # x_data_human = []
-    # y_data_human = []
-    #
-    # x_data_controller = []
-    # y_data_controller = []
-    #
-    # scale = 0.1
-    # for line in human_data:
-    #     x_data_human.append(scale*line[3])
-    #     y_data_human.append(scale*line[4])
-    # plt.scatter(x_data_human, y_data_human)
-    # x_data_first_controller = controller_data[0][5]
-    # y_data_first_controller = controller_data[0][6]
-    # for line in controller_data:
-    #     x_data_controller.append(line[5] - x_data_first_controller)
-    #     y_data_controller.append(line[6] - y_data_first_controller)
-    # plt.scatter(x_data_controller, y_data_controller)
-    #
+    legend = []
+    for data_to_plot in data:
+        plot_single_data(df=data_to_plot[0], x=data_to_plot[1], y=data_to_plot[2], scale=data_to_plot[3])
+        legend.append(data_to_plot[4])
+
+    plot_expected_data(dir=dir)
+    legend.append('Expected Trial')
+    plt.legend(legend)
+    plt.xlabel(labels[0])
+    plt.ylabel(labels[1])
+    plt.title(title)
+
+    if save:
+        plt.savefig('Plots/{}'.format(filename))
+    else:
+        plt.show()
+
+
+if __name__ == '__main__':
+    saved_data_file_name = '/Users/asar/PycharmProjects/InHand-Manipulation/AnalyseData/Data/filt_josh_2v2_g_none_1_' \
+                           'kpNone_kdNone_dp1_step1_save_data.csv'
+    saved_df = analyse_data.get_data(saved_data_file_name)
+
+    human_data_col = get_data(saved_df, find_in='human_cube_pos', strip_out='()')
+    # hello = plot_single_data(human_data_col, y=2, scale=1)
     # plt.show()
 
-    x_data_human = []
-    y_data_human = []
+    controller_data_col = get_data(saved_df, find_in='Cube_pos_in_start_pos', strip_out='[]')
+    # plot_single_data(controller_data_col, y=1, scale=1)
+    # plt.show()
 
-    x_data_controller = []
-    y_data_controller = []
-
-    scale = 0.1
-
-    x_data_first_controller = controller_data[0][5]
-    y_data_first_controller = controller_data[0][6]
-
-    if len(human_data) <= len(controller_data):
-        data = len(human_data)
-    else:
-        data = len(controller_data)
-    for i in range(data):
-        x_data_human.append(scale*human_data[i][3])
-        y_data_human.append(scale*human_data[i][4])
-
-        x_data_controller.append(controller_data[i][5] - x_data_first_controller)
-        y_data_controller.append(controller_data[i][6] - y_data_first_controller)
-
-        plt.plot([scale*human_data[i][3], controller_data[i][5] - x_data_first_controller],
-                 [scale*human_data[i][4], controller_data[i][6] - y_data_first_controller])
-
-    plt.scatter(x_data_human, y_data_human)
-    plt.scatter(x_data_controller, y_data_controller)
-
-    plt.show()
+    all_plots = [[human_data_col, 0, 2, 1, 'Human Trial'], [controller_data_col, 0, 1, 0.5, 'Controller Trial']]
+    direction = 'g'
+    save_plot = True
+    fig_name = 'g_dir_all_plots.png'
+    one_plot = [[human_data_col, 0, 2, 1, 'Human Trial']]
+    plot_multiple_data(all_plots, labels=['X position in cms', 'Y position in cms'], title='Movement of Cube in {}'.format(direction), dir=direction, save=save_plot, filename=fig_name)

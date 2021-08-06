@@ -163,9 +163,14 @@ def get_csv_in_johns_format(data):
             i += 1
 
 
+def get_data(filename):
+    df = pd.read_csv(filename)
+    return df
+
+
 if __name__ == '__main__':
     saved_data_file_name = 'AnalyseData/Data/filt_josh_2v2_g_none_1_kpNone_kdNone_dp1_step1_save_data.csv'
-    saved_df = pd.read_csv(saved_data_file_name)
+    saved_df = get_data(saved_data_file_name)
 
     get_stats(saved_df)
     data_in_johns_format = get_data_in_johns_format(saved_df)

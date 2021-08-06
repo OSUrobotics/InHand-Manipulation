@@ -432,6 +432,11 @@ class Manipulator(SceneObject):
         #         Markers.Marker(color=[1, 0, 0]).set_marker_pose(pos)
 
     def save_human_data(self, cube):
+        """
+        TODO: fix this to read from file!
+        :param cube:
+        :return:
+        """
         if self.phase is 'Move':
             pos = cube.next_pos
             quat_orn = cube.next_orn

@@ -579,4 +579,9 @@ class Manipulator(SceneObject):
 
 
 if __name__ == "__main__":
+    """
+    Human Data: cube position in cms
+    Expert Data:
+    Cube position: 
+    """
     pass

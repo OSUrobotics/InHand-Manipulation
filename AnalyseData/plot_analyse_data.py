@@ -28,8 +28,27 @@ def plot_expected_data(dir):
     :param dir:
     :return:
     """
-    if dir == 'g':
-        plt.plot([0, -0.05], [0, 0])
+    dist = 0.05
+    start_at = 0.0
+    if dir == 'a':
+        plt.plot([0, 0], [0, 0.04])
+    elif dir == 'b':
+        plt.plot([0, 0.04],[0, 0.04])
+    elif dir == 'c':
+        plt.plot([0, dist], [0, 0])
+    elif dir == 'd':
+        plt.plot([0, 0.02], [0, -0.02])
+    elif dir == 'e':
+        plt.plot([0, 0], [0, -0.02])
+    elif dir == 'f':
+        plt.plot([0, -0.02], [0, -0.02])
+    elif dir == 'g':
+        plt.plot([0, -dist], [0, 0])
+    elif dir == 'h':
+        plt.plot([0, -0.03], [0, 0.03])
+    else:
+        print("Wrong Direction!")
+        raise ValueError
 
 
 def plot_multiple_data(data,labels, title, dir, save=False, filename=''):
@@ -61,8 +80,9 @@ def plot_multiple_data(data,labels, title, dir, save=False, filename=''):
 
 
 if __name__ == '__main__':
-    saved_data_file_name = '/Users/asar/PycharmProjects/InHand-Manipulation/AnalyseData/Data/filt_josh_2v2_g_none_1_' \
-                           'kpNone_kdNone_dp1_step1_save_data.csv'
+    direction = 'a'
+    saved_data_file_name = '/Users/asar/PycharmProjects/InHand-Manipulation/AnalyseData/Data/filt_josh_2v2_{}_none_1_kpNone_kdNone_dp1_step1_save_data.csv'.format(direction) #'/Users/asar/PycharmProjects/InHand-Manipulation/AnalyseData/Data/filt_josh_2v2_g_none_1_' \
+                           #'kpNone_kdNone_dp1_step1_save_data.csv'
     saved_df = analyse_data.get_data(saved_data_file_name)
 
     human_data_col = get_data(saved_df, find_in='human_cube_pos', strip_out='()')
@@ -74,8 +94,8 @@ if __name__ == '__main__':
     # plt.show()
 
     all_plots = [[human_data_col, 0, 2, 1, 'Human Trial'], [controller_data_col, 0, 1, 0.5, 'Controller Trial']]
-    direction = 'g'
+
     save_plot = True
-    fig_name = 'g_dir_all_plots.png'
+    fig_name = '{}_dir_all_plots_expected.png'.format(direction)
     one_plot = [[human_data_col, 0, 2, 1, 'Human Trial']]
     plot_multiple_data(all_plots, labels=['X position in cms', 'Y position in cms'], title='Movement of Cube in {}'.format(direction), dir=direction, save=save_plot, filename=fig_name)

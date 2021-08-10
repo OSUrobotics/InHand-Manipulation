@@ -4,6 +4,7 @@ import pybullet as p
 import pybullet_data
 import pandas as pd
 import sys
+import numpy as np
 
 def read_file(filename):
     """
@@ -31,7 +32,10 @@ def load_object_sdf(filename):
     :return: obj_id: Reference variable to object(s) in scene
     """
     all_objects = p.loadSDF(filename)
+    p.resetBasePositionAndOrientation(all_objects[0], p.getBasePositionAndOrientation(all_objects[0])[0],
+                                      p.getQuaternionFromEuler([0, np.pi/2, np.pi/2]))
     num_objs = len(all_objects)
+    p.resetBasePositionAndOrientation(all_objects[1], [0.00, 0.12, 0], p.getBasePositionAndOrientation(all_objects[1])[1])
 
     gripper_id = all_objects[0]
     if num_objs > 1:
@@ -69,7 +73,7 @@ def load_urdfs(filenames_list):
     if num_objs > 1:
         objects = []
         for i in range(1, num_objs):
-            objects.append(p.loadURDF(filenames_list[i], basePosition=[0.0, 0.16, 0], useFixedBase=False))
+            objects.append(p.loadURDF(filenames_list[i], basePosition=[0.00, 0.18, 0.01], useFixedBase=False))
             # objects.append(p.loadURDF(filenames_list[i], basePosition=[0.01, 0.16, 0], useFixedBase=False))
     else:
         objects = None
@@ -89,8 +93,8 @@ def init_sim(filename=None):
     p.setGravity(0, 0, -10)
     plane_id = p.loadURDF("plane.urdf")
     if filename is not None:
-        # no_of_objects, gripper_id, object_id = load_object_sdf(filename)
-        no_of_objects, gripper_id, object_id = load_urdfs(filenames_list=filename)
+        no_of_objects, gripper_id, object_id = load_object_sdf(filename)
+        # no_of_objects, gripper_id, object_id = load_urdfs(filenames_list=filename)
     else:
         no_of_objects = 0
         gripper_id = None

@@ -78,9 +78,9 @@ if __name__ == "__main__":
     # print("CONTROLLER DATA: {}".format(controller_data))
     # plot.plot_human_and_controller_data_from_file(human_data, controller_data)
     #
-    # (physicsClient, planeID, num_objects, gripperID, objectIDs) = setup.init_sim(args.path_to_gripper_sdf)
-    (physicsClient, planeID, num_objects, gripperID, objectIDs) = setup.init_sim([args.path_to_gripper_urdf,
-                                                                                  args.path_to_object_urdf])
+    (physicsClient, planeID, num_objects, gripperID, objectIDs) = setup.init_sim(args.path_to_gripper_sdf)
+    # (physicsClient, planeID, num_objects, gripperID, objectIDs) = setup.init_sim([args.path_to_gripper_urdf,
+    #                                                                               args.path_to_object_urdf])
     objectID = objectIDs[0]
     setup.set_camera_view(args.camera_view)
     gripper = Manipulator.Manipulator(gripperID, args.open_fingers_pose, args.start_grasp_pose)
@@ -89,9 +89,11 @@ if __name__ == "__main__":
     # Moving code
     gripper.phase = 'Open'
     gripper.human_data_file_name = parse_file_name
+    print("##!!!!!!@@@@@@@@", gripper.human_data_file_name)
     gripper.human_data = human_data
     done_open, _ = gripper.move_fingers_to_pose(gripper.open_fingers_pose, abs_tol=0.1)
     print("Complete Open? {}".format(done_open))
+    # cube.start_pos =
     p.resetBasePositionAndOrientation(objectID, cube.start_pos, cube.start_orn)
 
     gripper.phase = 'Close'

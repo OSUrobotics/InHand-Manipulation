@@ -137,7 +137,7 @@ def get_stats(df):
 
     df_new = pd.DataFrame.from_dict(analysis_dict)
     # print("DF {}".format(df_new.items))
-    df_new.to_csv('AnalyseData/Data/'+ 'new_data.csv')
+    df_new.to_csv('AnalyseData/Data/'+ 'new_data_expected.csv')
 
 
 def get_data_in_johns_format(df):
@@ -169,7 +169,7 @@ def get_data(filename):
 
 
 if __name__ == '__main__':
-    saved_data_file_name = 'AnalyseData/Data/filt_josh_2v2_g_none_1_kpNone_kdNone_dp1_step1_save_data.csv'
+    saved_data_file_name = '/Users/asar/PycharmProjects/InHand-Manipulation/AnalyseData/Data/asar_kpNone_kdNone_dp1_step1_save_data.csv' # AnalyseData/Data/filt_josh_2v2_g_none_1_kpNone_kdNone_dp1_step1_save_data.csv'
     saved_df = get_data(saved_data_file_name)
 
     get_stats(saved_df)

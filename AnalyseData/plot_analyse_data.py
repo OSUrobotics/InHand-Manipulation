@@ -82,14 +82,15 @@ def plot_multiple_data(data,labels, title, dir, save=False, filename=''):
 
 if __name__ == '__main__':
     direction = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-    # direction = ['b']
-    hand = 'expected/new_hand_expected'
+    # direction = ['f']
+    hand = 'new_hand_human'
     for dir in direction:
         if dir == 'f' or dir == 'g':
             trial = 1
         else:
             trial = 1
-        saved_data_file_name = '/Users/asar/PycharmProjects/InHand-Manipulation/AnalyseData/Data/{}_exp_2v2_{}_none_{}_kpNone_kdNone_dp1_step1_save_data.csv'.format(hand, dir, trial) #'/Users/asar/PycharmProjects/InHand-Manipulation/AnalyseData/Data/filt_josh_2v2_g_none_1_' \
+            # / Users / asar / PycharmProjects / InHand - Manipulation / AnalyseData / Data / new_hand_human_filt_josh_2v2_b_none_1_kpNone_kdNone_dp5_step5_save_data.csv
+        saved_data_file_name = '/Users/asar/PycharmProjects/InHand-Manipulation/AnalyseData/Data/{}_filt_josh_2v2_{}_none_{}_kpNone_kdNone_dp5_step5_save_data.csv'.format(hand, dir, trial) #'/Users/asar/PycharmProjects/InHand-Manipulation/AnalyseData/Data/filt_josh_2v2_g_none_1_' \
                                #'kpNone_kdNone_dp1_step1_save_data.csv'
         saved_df = analyse_data.get_data(saved_data_file_name)
 
@@ -104,6 +105,6 @@ if __name__ == '__main__':
         all_plots = [[human_data_col, 0, 2, 1, 'Human Trial', 'blue'], [controller_data_col, 0, 1, 0.5, 'Controller Trial', 'red']]
 
         save_plot = True
-        fig_name = '{}_dir_all_plots_expected.png'.format(hand)
+        fig_name = '{}_dir_all_plots_more_steps_human.png'.format(hand)
         one_plot = [[human_data_col, 0, 2, 1, 'Human Trial']]
         plot_multiple_data(all_plots, labels=['X position in cms', 'Y position in cms'], title='Movement of Cube in {}'.format(dir), dir=dir, save=save_plot, filename=fig_name)

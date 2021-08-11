@@ -10,14 +10,34 @@ def create_traj(dir):
     :param dir: alphabet signalling the direction of motion
     :return: data: array of straight line traj
     """
-    stop_at = 4.0
+    stop_at = 0.5
     start_at = 0.0
-    samples = 120
+    samples = 80
 
-    if dir == 'g':
+    if dir == 'a':
         data = np.linspace(start=[start_at, start_at, start_at, start_at, start_at, start_at],
-                           stop=[-stop_at, start_at, start_at, -stop_at, start_at, start_at], num=samples)
-
+                           stop=[start_at, stop_at, start_at, start_at, stop_at, start_at], num=samples)
+    elif dir == 'b':
+        data = np.linspace(start=[start_at, start_at, start_at, start_at, start_at, start_at],
+                           stop=[stop_at, stop_at, start_at, stop_at, stop_at, start_at], num=samples)
+    elif dir == 'c':
+        data = np.linspace(start=[start_at, start_at, start_at, start_at, start_at, start_at],
+                           stop=[stop_at, start_at, start_at, stop_at, start_at, start_at], num=samples)
+    elif dir == 'd':
+        data = np.linspace(start=[start_at, start_at, start_at, start_at, start_at, start_at],
+                       stop=[stop_at, -stop_at, start_at, stop_at, -stop_at, start_at], num=samples)
+    elif dir == 'e':
+        data = np.linspace(start=[start_at, start_at, start_at, start_at, start_at, start_at],
+                           stop=[start_at, -stop_at, start_at, start_at, -stop_at, start_at], num=samples)
+    elif dir == 'f':
+        data = np.linspace(start=[start_at, start_at, start_at, start_at, start_at, start_at],
+                           stop=[-stop_at, -stop_at, start_at, -stop_at, -stop_at, start_at], num=samples)
+    elif dir == 'g':
+        data = np.linspace(start=[start_at, start_at, start_at, start_at, start_at, start_at],
+                       stop=[-stop_at, start_at, start_at, -stop_at, start_at, start_at], num=samples)
+    elif dir == 'h':
+        data = np.linspace(start=[start_at, start_at, start_at, start_at, start_at, start_at],
+                       stop=[-stop_at, stop_at, start_at, -stop_at, stop_at, start_at], num=samples)
     else:
         data = None
 
@@ -43,7 +63,8 @@ def save_traj(file_name, data_to_save):
 
 
 if __name__ == '__main__':
-    alph = 'g'
-    filename = '/Users/asar/PycharmProjects/InHand-Manipulation/Human Study Data/expected_data/exp_2v2_g_none_1.csv'
-    created_traj = create_traj(dir=alph)
-    save_traj(filename, created_traj)
+    direction = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+    for alph in direction:
+        filename = '/Users/asar/PycharmProjects/InHand-Manipulation/Human Study Data/expected_data/exp_2v2_{}_none_1.csv'.format(alph)
+        created_traj = create_traj(dir=alph)
+        save_traj(filename, created_traj)

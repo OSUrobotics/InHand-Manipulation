@@ -50,6 +50,7 @@ class Manipulator(SceneObject):
         self.save_data_dict = {}
         self.only_first_entry = False
         self.cube_subtract_from_pos = None
+        self.hand_type = None
 
         # Tunable parameters
         self.set_pid = False
@@ -72,10 +73,10 @@ class Manipulator(SceneObject):
         self.get_joints_info()
 
         for i in range(0, len(self.joint_info)):
-            if i == 0:
-                self.joint_dict_with_base.update({self.joint_info[i][1]: self.joint_info[i][0]})
-                self.key_names_list_with_base.append(self.joint_info[i][1])
-                continue
+            # if i == 0:
+            #     self.joint_dict_with_base.update({self.joint_info[i][1]: self.joint_info[i][0]})
+            #     self.key_names_list_with_base.append(self.joint_info[i][1])
+            #     continue
             self.joint_dict.update({self.joint_info[i][1]: self.joint_info[i][0]})
             self.joint_dict_with_base.update({self.joint_info[i][1]: self.joint_info[i][0]})
             self.key_names_list.append(self.joint_info[i][1])
@@ -577,7 +578,8 @@ class Manipulator(SceneObject):
         print("DICT: {}".format(self.save_data_dict))
         df = pd.DataFrame.from_dict(self.save_data_dict)
         print("DF {}".format(df.items))
-        df.to_csv('AnalyseData/Data/' + self.human_data_file_name + '_kp{}_kd{}_dp{}_step{}'.format(self.k_p, self.k_d, self.limit_data, self.ep_step) +'_save_data.csv')
+        print(self.hand_type)
+        df.to_csv('AnalyseData/Data/expected/{}_'.format(self.hand_type) + self.human_data_file_name + '_kp{}_kd{}_dp{}_step{}'.format(self.k_p, self.k_d, self.limit_data, self.ep_step) +'_save_data.csv')
 
 
 if __name__ == "__main__":

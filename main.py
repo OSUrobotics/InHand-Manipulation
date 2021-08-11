@@ -20,6 +20,7 @@ def load_from_file(filename, parser, namespace):
                         default='Human Study Data/anjali_data_better/filt_josh_2v2_c_none_1.csv')
     parser.add_argument("--camera_view", default="TOP")
     parser.add_argument("--path_to_gripper_sdf", default='ExampleSimWorld-Josh/new/testing2_try.sdf')
+    parser.add_argument("--path_to_object_sdf", default='ExampleSimWorld-Josh/2v2_hands/999/object_only.sdf')
     parser.add_argument("--open_fingers_pose", action='append', type=float)
     parser.add_argument("--start_grasp_pose", action='append', type=float)
     parser.add_argument("--path_to_gripper_urdf", default='ExampleSimWorld-Josh/2v2_test_hand_anjali/2v2_test_hand.urdf')
@@ -78,14 +79,14 @@ if __name__ == "__main__":
     # print("CONTROLLER DATA: {}".format(controller_data))
     # plot.plot_human_and_controller_data_from_file(human_data, controller_data)
     #
-    (physicsClient, planeID, num_objects, gripperID, objectIDs) = setup.init_sim(args.path_to_gripper_sdf)
-    # (physicsClient, planeID, num_objects, gripperID, objectIDs) = setup.init_sim([args.path_to_gripper_urdf,
-    #                                                                               args.path_to_object_urdf])
+    # (physicsClient, planeID, num_objects, gripperID, objectIDs) = setup.init_sim(args.path_to_gripper_sdf)
+    (physicsClient, planeID, num_objects, gripperID, objectIDs) = setup.init_sim([args.path_to_gripper_urdf,
+                                                                                  args.path_to_object_sdf])
     objectID = objectIDs[0]
     setup.set_camera_view(args.camera_view)
     gripper = Manipulator.Manipulator(gripperID, args.open_fingers_pose, args.start_grasp_pose)
     cube = ObjectsInScene.SceneObject(objectID)
-
+    gripper.hand_type = 'new_hand_expected'
     # Moving code
     gripper.phase = 'Open'
     gripper.human_data_file_name = parse_file_name

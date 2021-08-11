@@ -42,7 +42,7 @@ def euc_dist_calc(pos_col):
     return euc_dist, euc_dist_avg, pos_col
 
 
-def get_stats(df):
+def get_stats(df, hand, trial, dir, trial_num, dp, step, kp=None, kd=None):
     analysis_dict = {}
 
     # Left Proximal Joint Angle and Velocties
@@ -137,7 +137,7 @@ def get_stats(df):
 
     df_new = pd.DataFrame.from_dict(analysis_dict)
     # print("DF {}".format(df_new.items))
-    df_new.to_csv('AnalyseData/Data/'+ 'new_data_expected.csv')
+    df_new.to_csv('AnalyseData/Data/analysis/{}_{}_2v2_{}_none_{}_kp{}_kd{}_dp{}_step{}_analysed_data.csv'.format(hand, trial, dir, trial_num, kp, kd, dp, step))
 
 
 def get_data_in_johns_format(df):
@@ -150,12 +150,12 @@ def get_data_in_johns_format(df):
     return list_data
 
 
-def get_csv_in_johns_format(data):
+def get_csv_in_johns_format(data, save_file):
     file = 'AnalyseData/Data/controller_2v2_g_n_1.csv'
     i = 0
     start_x, start_y = data[0][0][0], data[0][0][1]
     data[0][1][0] = 0
-    with open(file, 'w') as f:
+    with open(save_file, 'w') as f:
         f_csv = csv.writer(f)
         f_csv.writerow(['frame', 'pitch', 'rmag', 'roll', 'tmag', 'x', 'y', 'yaw', 'z'])
         for line in data:
@@ -169,9 +169,21 @@ def get_data(filename):
 
 
 if __name__ == '__main__':
-    saved_data_file_name = '/Users/asar/PycharmProjects/InHand-Manipulation/AnalyseData/Data/asar_kpNone_kdNone_dp1_step1_save_data.csv' # AnalyseData/Data/filt_josh_2v2_g_none_1_kpNone_kdNone_dp1_step1_save_data.csv'
+    dir = 'a'
+    hand = 'new_hand'
+    # trial = 'human_filt_josh'
+    trial = 'expected_exp'
+    trial_num = 1
+    controller_name = 'controller{}_2v2_{}_n_{}.csv'.format(trial.split('_')[0], dir, trial_num)
+    # print("CONTROLLER: ".format(controller_name))
+    dp = 1
+    step = 1
+    kp = None
+    kd = None
+    saved_data_file_name = '/Users/asar/PycharmProjects/InHand-Manipulation/AnalyseData/Data/Trial Data/{}_{}_2v2_{}_none_{}_kp{}_kd{}_dp{}_step{}_save_data.csv'.format(hand, trial, dir, trial_num, kp, kd, dp, step)
     saved_df = get_data(saved_data_file_name)
 
-    get_stats(saved_df)
+    get_stats(saved_df, hand, trial, dir, trial_num, dp, step, kp, kd)
     data_in_johns_format = get_data_in_johns_format(saved_df)
-    get_csv_in_johns_format(data_in_johns_format)
+    save_file_name = 'AnalyseData/Data/john data/{}'.format(controller_name)
+    get_csv_in_johns_format(data_in_johns_format, save_file_name)

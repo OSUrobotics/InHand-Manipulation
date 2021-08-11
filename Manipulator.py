@@ -579,7 +579,7 @@ class Manipulator(SceneObject):
         df = pd.DataFrame.from_dict(self.save_data_dict)
         print("DF {}".format(df.items))
         print(self.hand_type)
-        df.to_csv('AnalyseData/Data/{}_'.format(self.hand_type) + self.human_data_file_name + '_kp{}_kd{}_dp{}_step{}'.format(self.k_p, self.k_d, self.limit_data, self.ep_step) +'_save_data.csv')
+        df.to_csv('AnalyseData/Data/Trial Data/{}_'.format(self.hand_type) + self.human_data_file_name + '_kp{}_kd{}_dp{}_step{}'.format(self.k_p, self.k_d, self.limit_data, self.ep_step) +'_save_data.csv')
 
 
 if __name__ == "__main__":

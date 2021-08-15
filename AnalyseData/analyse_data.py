@@ -169,17 +169,18 @@ def get_data(filename):
 
 
 if __name__ == '__main__':
-    dir = 'a'
+    dir = 'h'
     hand = 'new_hand'
-    # trial = 'human_filt_josh'
-    trial = 'expected_exp'
+    trial = 'human_filt_josh'
+    # trial = 'expected_exp'
     trial_num = 1
-    controller_name = 'controller{}_2v2_{}_n_{}.csv'.format(trial.split('_')[0], dir, trial_num)
-    # print("CONTROLLER: ".format(controller_name))
-    dp = 1
-    step = 1
+    dp = 5
+    step = 5
     kp = None
     kd = None
+    controller_name = 'controller{}kp{}kd{}dp{}step{}_2v2_{}_n_{}.csv'.format(trial.split('_')[0], kp, kd, dp, step, dir, trial_num)
+    # print("CONTROLLER: ".format(controller_name))
+
     saved_data_file_name = '/Users/asar/PycharmProjects/InHand-Manipulation/AnalyseData/Data/Trial Data/{}_{}_2v2_{}_none_{}_kp{}_kd{}_dp{}_step{}_save_data.csv'.format(hand, trial, dir, trial_num, kp, kd, dp, step)
     saved_df = get_data(saved_data_file_name)
 

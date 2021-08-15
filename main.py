@@ -86,7 +86,7 @@ if __name__ == "__main__":
     setup.set_camera_view(args.camera_view)
     gripper = Manipulator.Manipulator(gripperID, args.open_fingers_pose, args.start_grasp_pose)
     cube = ObjectsInScene.SceneObject(objectID)
-    gripper.hand_type = 'new_hand_human'
+    gripper.hand_type = 'new_hand_expected'
     # Moving code
     gripper.phase = 'Open'
     gripper.human_data_file_name = parse_file_name

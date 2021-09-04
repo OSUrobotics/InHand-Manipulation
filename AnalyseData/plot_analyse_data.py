@@ -6,7 +6,7 @@ import numpy as np
 
 
 def get_data(df, find_in, strip_out):
-    find_col = analyse_data.find_data_with_other_col(saved_df, 'Phase', 'Move', find_in)
+    find_col = analyse_data.find_data_with_other_col(df, 'Phase', 'Move', find_in)
     find_col = find_col.fillna(find_col.loc[find_col.first_valid_index()])
     find_col_list = analyse_data.convert_string_list_to_list_float(find_col, strip_out)
     return find_col_list
@@ -89,6 +89,8 @@ def plot_multiple_data(data, labels, title, dir, save=False, filename='', track=
     plt.xlabel(labels[0])
     plt.ylabel(labels[1])
     plt.title(title)
+    if 'dir_all' not in filename:
+        set_axis_limits(dir)
 
     if save:
         if track:
@@ -120,50 +122,125 @@ def plot_track_human_and_controller(data):
         # print("HELLO: {}, I: ".format(line.values))
         # print("Scale: {} i: {}, ".format(line.values, i))
         plt.plot([scale_data_1*line1[x_data_1], scale_data_2*line2[x_data_2]], [scale_data_1*line1[y_data_1],
-                                                                                scale_data_2*line2[y_data_2]])
-        pass
-    pass
+                                                                                scale_data_2*line2[y_data_2]], 'gray',
+                 linestyle='dotted')
+
+
+def set_axis_limits(dir):
+    step_x = 0.005
+    step_y = 0.001
+    # limit =
+    if dir == 'a':
+        limits_x = np.arange(-0.006, 0.006, step_y)
+        limits_y = np.arange(0, 0.05, step_x)
+        plt.xlim([-0.006, 0.006])
+    elif dir == 'b':
+        limits_x = np.arange(0, 0.05, step_x)
+        limits_y = np.arange(0, 0.05, step_x)
+        plt.xlim([0, 0.05])
+        plt.ylim([0, 0.05])
+    elif dir == 'c':
+        limits_x = np.arange(0, 0.05, step_x)
+        limits_y = np.arange(-0.004, 0.008, step_y)
+        plt.xlim([0, 0.05])
+        plt.ylim([-0.004, 0.009])
+    elif dir == 'd':
+        limits_x = np.arange(0, 0.030, step_x)
+        limits_y = np.arange(-0.04, 0.04, step_x)
+        plt.xlim([0, 0.03])
+        plt.ylim([-0.04, 0.04])
+    elif dir == 'e':
+        limits_x = np.arange(-0.002, 0.010, step_y)
+        limits_y = np.arange(-0.030, 0.010, step_x)
+        plt.xlim([-0.002, 0.010])
+        plt.ylim([-0.03, 0.01])
+    elif dir == 'f':
+        limits_x = np.arange(-0.02, 0.0025, step_x)
+        limits_y = np.arange(-0.035, 0.005, step_x)
+        plt.xlim([-0.002, 0.0025])
+        plt.ylim([-0.035, 0.01])
+    elif dir == 'g':
+        limits_x = np.arange(-0.05, 0.0, step_x)
+        limits_y = np.arange(-0.002, 0.012, step_y)
+    elif dir == 'h':
+        limits_x = np.arange(-0.03, 0.0, step_x)
+        limits_y = np.arange(0.0, 0.03, step_x)
+    else:
+        print("Wrong Direction!")
+        raise ValueError
+    _, labels_x = plt.xticks(limits_x)
+    _, labels_y = plt.yticks(limits_y)
+    plt.setp(labels_x, rotation=30, horizontalalignment='right')
+    plt.setp(labels_y, rotation=30, horizontalalignment='right')
+
+    return plt
 
 
 if __name__ == '__main__':
     direction = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-    # direction = ['h']
-    # trial = 'human_filt_josh'
-    trial = 'expected_exp'
+    # direction = ['a']
+    trial_hum = 'human_filt_josh'
+    trial_exp = 'expected_exp'
     hand = 'new_hand'
-    track=False
+    track = False
+    if not track:
+        save_trial = 'combined_plots'
+    else:
+        trial = trial_hum
+        save_trial = trial
     dp = 5
     step = 5
     kp = None
     kd = None
+    if len(direction) > 1:
+        track = False
     for dir in direction:
         if dir == 'f' or dir == 'g':
             trial_num = 1
         else:
             trial_num = 1
 
-        saved_data_file_name = '/Users/asar/PycharmProjects/InHand-Manipulation/AnalyseData/Data/Trial Data/{}_{}_2v2_{}_none_{}_kp{}_kd{}_dp{}_step{}_save_data.csv'.format(
-            hand, trial, dir, trial_num, kp, kd, dp, step)
+        if track:
+            saved_data_file_name = '/Users/asar/PycharmProjects/InHand-Manipulation/AnalyseData/Data/Trial Data/{}_{}_2v2_{}_none_{}_kp{}_kd{}_dp{}_step{}_save_data.csv'.format(
+                hand, trial, dir, trial_num, kp, kd, dp, step)
+            saved_df_controller = analyse_data.get_data(saved_data_file_name)
+            human_data_col = get_data(saved_df_controller, find_in='human_cube_pos', strip_out='()')
+            controller_data_col = get_data(saved_df_controller, find_in='Cube_pos_in_start_pos', strip_out='[]')
+            plot1 = [human_data_col, 0, 2, 1, 'Human Trial', 'blue']
+            plot2 = [controller_data_col, 0, 1, 0.5, 'Controller', 'red']
+            all_plots = [plot1, plot2]
+        else:
+            saved_data_controller_from_human = '/Users/asar/PycharmProjects/InHand-Manipulation/AnalyseData/Data/Trial Data/{}_{}_2v2_{}_none_{}_kp{}_kd{}_dp{}_step{}_save_data.csv'.format(
+                hand, trial_hum, dir, trial_num, kp, kd, dp, step)
+            saved_data_controller_from_expected = '/Users/asar/PycharmProjects/InHand-Manipulation/AnalyseData/Data/Trial Data/{}_{}_2v2_{}_none_{}_kp{}_kd{}_dp{}_step{}_save_data.csv'.format(
+                hand, trial_exp, dir, trial_num, kp, kd, dp, step)
 
-        saved_df = analyse_data.get_data(saved_data_file_name)
+            saved_df_controller_from_human = analyse_data.get_data(saved_data_controller_from_human)
+            saved_df_controller_from_expected = analyse_data.get_data(saved_data_controller_from_expected)
 
-        human_data_col = get_data(saved_df, find_in='human_cube_pos', strip_out='()')
-        # hello = plot_single_data(human_data_col, y=2, scale=1)
-        # plt.show()
+            human_data_col = get_data(saved_df_controller_from_human, find_in='human_cube_pos', strip_out='()')
+            # hello = plot_single_data(human_data_col, y=2, scale=1)
+            # plt.show()
 
-        controller_data_col = get_data(saved_df, find_in='Cube_pos_in_start_pos', strip_out='[]')
-        # plot_single_data(controller_data_col, y=1, scale=1)
-        # plt.show()
-        plot1 = [human_data_col, 0, 2, 1, 'Human Trial', 'blue']
-        plot2 = [controller_data_col, 0, 1, 0.5, 'Controller Trial', 'red']
+            human_controller_data_col = get_data(saved_df_controller_from_human, find_in='Cube_pos_in_start_pos', strip_out='[]')
+            # plot_single_data(controller_data_col, y=1, scale=1)
+            # plt.show()
 
-        all_plots = [plot1, plot2]
+            expected_controller_data_col = get_data(saved_df_controller_from_expected, find_in='Cube_pos_in_start_pos', strip_out='[]')
+            # plot_single_data(controller_data_col, y=1, scale=1)
+            # plt.show()
+
+            plot1 = [human_data_col, 0, 2, 1, 'Human Trial', 'blue']
+            plot2 = [human_controller_data_col, 0, 1, 0.5, 'Controller from Human', 'red']
+            plot3 = [expected_controller_data_col, 0, 1, 0.5, 'Controller from Expected', 'gold']
+
+            all_plots = [plot1, plot2, plot3]
 
         save_plot = True
         if len(direction) > 1:
-            fig_name = '{}_dir_all_plotskp{}_kd{}_dp{}_steps{}.png'.format(trial, kp, kd, dp, step)
+            fig_name = '{}_dir_all_plotskp{}_kd{}_dp{}_steps{}.png'.format(save_trial, kp, kd, dp, step)
         else:
-            fig_name = '{}_{}_all_plots_kp{}_kd{}_dp{}_steps{}.png'.format(trial, dir, kp, kd, dp, step)
+            fig_name = '{}_{}_all_plots_kp{}_kd{}_dp{}_steps{}.png'.format(save_trial, dir, kp, kd, dp, step)
         one_plot = [[human_data_col, 0, 2, 1, 'Human Trial']]
         plot_multiple_data(all_plots, labels=['X position in cms', 'Y position in cms'],
                            title='Movement of Cube in {}'.format(dir), dir=dir, save=save_plot, filename=fig_name, track=track)

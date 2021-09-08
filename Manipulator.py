@@ -56,8 +56,8 @@ class Manipulator(SceneObject):
         self.set_pid = False
         self.k_p = None
         self.k_d = None
-        self.ep_step = 5
-        self.limit_data = 5
+        self.ep_step = 1
+        self.limit_data = 1
 
     # def __repr__(self):
     #     return "This Gripper has {} joints called {}".format(self.num_joints, self.joint_dict_with_base.keys())
@@ -579,7 +579,7 @@ class Manipulator(SceneObject):
         df = pd.DataFrame.from_dict(self.save_data_dict)
         print("DF {}".format(df.items))
         print(self.hand_type)
-        df.to_csv('AnalyseData/Data/Trial Data/{}_'.format(self.hand_type) + self.human_data_file_name + '_kp{}_kd{}_dp{}_step{}'.format(self.k_p, self.k_d, self.limit_data, self.ep_step) +'_save_data.csv')
+        df.to_csv('AnalyseData/Data/Trial Data/Better/{}_'.format(self.hand_type) + self.human_data_file_name + '_kp{}_kd{}_dp{}_step{}'.format(self.k_p, self.k_d, self.limit_data, self.ep_step) +'_save_data.csv')
 
 
 if __name__ == "__main__":

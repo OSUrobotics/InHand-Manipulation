@@ -64,7 +64,6 @@ if __name__ == "__main__":
     import_arguments(args, parser)
     print("ARGUMENTS PASSED: {}".format(args))
 
-    parse_file_name = args.path_to_human_data.split('/')[2].split('.')[0]
     # print("$$$$", parse_file_name)
 
     # WITHOUT GYM:
@@ -86,11 +85,19 @@ if __name__ == "__main__":
     setup.set_camera_view(args.camera_view)
     gripper = Manipulator.Manipulator(gripperID, args.open_fingers_pose, args.start_grasp_pose)
     cube = ObjectsInScene.SceneObject(objectID)
-    gripper.hand_type = 'new_hand_expected'
+
+    if 'exp' in args.path_to_human_data:
+        split_at = 2
+        type = 'expected'
+    else:
+        split_at = 4
+        type = 'human'
+    parse_file_name = args.path_to_human_data.split('/')[split_at].split('.')[0]
+    gripper.hand_type = 'new_hand_{}'.format(type)
     # Moving code
     gripper.phase = 'Open'
     gripper.human_data_file_name = parse_file_name
-    print("##!!!!!!@@@@@@@@", gripper.human_data_file_name)
+    print("##!!!!!!@@@@@@@@", gripper.human_data_file_name, gripper.hand_type)
     gripper.human_data = human_data
     done_open, _ = gripper.move_fingers_to_pose(gripper.open_fingers_pose, abs_tol=0.1)
     print("Complete Open? {}".format(done_open))

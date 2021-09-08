@@ -140,10 +140,10 @@ def set_axis_limits(dir):
         plt.xlim([0, 0.05])
         plt.ylim([0, 0.05])
     elif dir == 'c':
-        limits_x = np.arange(0, 0.05, step_x)
-        limits_y = np.arange(-0.004, 0.008, step_y)
-        plt.xlim([0, 0.05])
-        plt.ylim([-0.004, 0.009])
+        limits_x = np.arange(0, 0.08, step_x)
+        limits_y = np.arange(-0.004, 0.012, step_y)
+        plt.xlim([0, 0.08])
+        plt.ylim([-0.004, 0.012])
     elif dir == 'd':
         limits_x = np.arange(0, 0.030, step_x)
         limits_y = np.arange(-0.04, 0.04, step_x)
@@ -177,17 +177,24 @@ def set_axis_limits(dir):
 
 
 if __name__ == '__main__':
-    direction = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-    # direction = ['a']
-    trial_hum = 'human_filt_josh'
-    trial_exp = 'expected_exp'
+    directory = '/Users/asar/PycharmProjects/InHand-Manipulation/AnalyseData/Data/Trial Data/Better'
+    # direction = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+    direction = ['h']
+    subject = 'sub1'
+    # plot_type = 'single'
+    plot_type = 'combined_all'
+    trial_hum = 'human_'+subject
+    trial_exp = 'expected_' + 'exp'
     hand = 'new_hand'
-    track = False
-    if not track:
-        save_trial = 'combined_plots'
-    else:
+
+    if plot_type == 'single':
         trial = trial_hum
-        save_trial = trial
+        track = True
+        save_trial = plot_type+'_plot_'+trial
+    else:
+        trial = ''
+        track = False
+        save_trial = plot_type+'_plots_'+subject
     dp = 5
     step = 5
     kp = None
@@ -200,20 +207,26 @@ if __name__ == '__main__':
         else:
             trial_num = 1
 
-        if track:
-            saved_data_file_name = '/Users/asar/PycharmProjects/InHand-Manipulation/AnalyseData/Data/Trial Data/{}_{}_2v2_{}_none_{}_kp{}_kd{}_dp{}_step{}_save_data.csv'.format(
+        if 'single_plot' in save_trial:
+            saved_data_file_name = directory+'/{}_{}_2v2_{}_n_{}_kp{}_kd{}_dp{}_step{}_save_data.csv'.format(
                 hand, trial, dir, trial_num, kp, kd, dp, step)
             saved_df_controller = analyse_data.get_data(saved_data_file_name)
             human_data_col = get_data(saved_df_controller, find_in='human_cube_pos', strip_out='()')
+            # print("HU: {}".format(human_data_col))
+            # hello = plot_single_data(human_data_col, y=2, scale=1)
+            # plt.show()
             controller_data_col = get_data(saved_df_controller, find_in='Cube_pos_in_start_pos', strip_out='[]')
+            # print("CON: {}".format(controller_data_col))
+            # hello = plot_single_data(controller_data_col, y=2, scale=1)
+            # plt.show()
             plot1 = [human_data_col, 0, 2, 1, 'Human Trial', 'blue']
-            plot2 = [controller_data_col, 0, 1, 0.5, 'Controller', 'red']
+            plot2 = [controller_data_col, 0, 1, 1, 'Controller', 'red']
             all_plots = [plot1, plot2]
         else:
-            saved_data_controller_from_human = '/Users/asar/PycharmProjects/InHand-Manipulation/AnalyseData/Data/Trial Data/{}_{}_2v2_{}_none_{}_kp{}_kd{}_dp{}_step{}_save_data.csv'.format(
-                hand, trial_hum, dir, trial_num, kp, kd, dp, step)
-            saved_data_controller_from_expected = '/Users/asar/PycharmProjects/InHand-Manipulation/AnalyseData/Data/Trial Data/{}_{}_2v2_{}_none_{}_kp{}_kd{}_dp{}_step{}_save_data.csv'.format(
-                hand, trial_exp, dir, trial_num, kp, kd, dp, step)
+            saved_data_controller_from_human = directory+'/{}_{}_2v2_{}_n_{}_kp{}_kd{}_dp{}_step{}_save_data.csv'.\
+                format(hand, trial_hum, dir, trial_num, kp, kd, dp, step)
+            saved_data_controller_from_expected = directory+'/{}_{}_2v2_{}_n_{}_kp{}_kd{}_dp{}_step{}_save_data.csv'.\
+                format(hand, trial_exp, dir, trial_num, kp, kd, dp, step)
 
             saved_df_controller_from_human = analyse_data.get_data(saved_data_controller_from_human)
             saved_df_controller_from_expected = analyse_data.get_data(saved_data_controller_from_expected)
@@ -230,11 +243,26 @@ if __name__ == '__main__':
             # plot_single_data(controller_data_col, y=1, scale=1)
             # plt.show()
 
-            plot1 = [human_data_col, 0, 2, 1, 'Human Trial', 'blue']
-            plot2 = [human_controller_data_col, 0, 1, 0.5, 'Controller from Human', 'red']
-            plot3 = [expected_controller_data_col, 0, 1, 0.5, 'Controller from Expected', 'gold']
+            dp_other = 1
+            step_other = 1
+            saved_data_controller_from_human_other = directory+'/{}_{}_2v2_{}_n_{}_kp{}_kd{}_dp{}_step{}_save_data.csv'\
+                .format(hand, trial_hum, dir, trial_num, kp, kd, dp_other, step_other)
+            saved_data_controller_from_expected_other = directory+'/{}_{}_2v2_{}_n_{}_kp{}_kd{}_dp{}_step{}_save_data.csv'.\
+                format(hand, trial_exp, dir, trial_num, kp, kd, dp_other, step_other)
 
-            all_plots = [plot1, plot2, plot3]
+            saved_df_controller_from_human_other = analyse_data.get_data(saved_data_controller_from_human_other)
+            saved_df_controller_from_expected_other = analyse_data.get_data(saved_data_controller_from_expected_other)
+
+            human_controller_data_col_other = get_data(saved_df_controller_from_human_other, find_in='Cube_pos_in_start_pos', strip_out='[]')
+            expected_controller_data_col_other = get_data(saved_df_controller_from_expected_other, find_in='Cube_pos_in_start_pos', strip_out='[]')
+
+            plot1 = [human_data_col, 0, 2, 1, 'Human Trial', 'blue']
+            plot2 = [human_controller_data_col, 0, 1, 1, 'Controller from Human', 'red']
+            plot3 = [expected_controller_data_col, 0, 1, 1, 'Controller from Expected', 'gold']
+            plot4 = [human_controller_data_col_other, 0, 1, 1, 'Controller from Human Other', 'm']
+            plot5 = [expected_controller_data_col_other, 0, 1, 1, 'Controller from Expected Other', 'c']
+
+            all_plots = [plot1, plot2, plot3, plot4, plot5]
 
         save_plot = True
         if len(direction) > 1:

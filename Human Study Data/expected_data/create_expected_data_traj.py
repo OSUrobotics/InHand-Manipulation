@@ -4,15 +4,15 @@ import csv
 import numpy as np
 
 
-def create_traj(dir):
+def create_traj(dir, stop_at=50, start_at=0.0, samples=80):
     """
     Create straight in given directin
     :param dir: alphabet signalling the direction of motion
     :return: data: array of straight line traj
     """
-    stop_at = 0.5
-    start_at = 0.0
-    samples = 80
+    # stop_at = 0.5
+    # start_at = 0.0
+    # samples = 80
 
     if dir == 'a':
         data = np.linspace(start=[start_at, start_at, start_at, start_at, start_at, start_at],
@@ -44,6 +44,7 @@ def create_traj(dir):
     index = np.arange(0, samples, dtype=int).T
     index = index.reshape(samples,1)
     data = np.concatenate((index, data), axis=1)
+    # print("Data", data)
     return data
 
 
@@ -54,7 +55,7 @@ def save_traj(file_name, data_to_save):
     :param data_to_save: numpy array of traj
     :return:
     """
-    first_row = ['' ,'x','y','rmag','f_x','f_y','f_rot_mag']
+    first_row = ['frame' ,'x','y','rmag','f_x','f_y','f_rot_mag']
     with open(file_name, 'w') as f:
         write_it = csv.writer(f, delimiter=',')
         write_it.writerow(first_row)
@@ -65,6 +66,10 @@ def save_traj(file_name, data_to_save):
 if __name__ == '__main__':
     direction = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
     for alph in direction:
-        filename = '/Users/asar/PycharmProjects/InHand-Manipulation/Human Study Data/expected_data/exp_2v2_{}_none_1.csv'.format(alph)
-        created_traj = create_traj(dir=alph)
+        filename = '/Users/asar/PycharmProjects/InHand-Manipulation/Human Study Data/expected_data/exp_2v2_{}_n_1.csv'.format(alph)
+        if alph == 'c' or alph =='d' or alph == 'f' or alph == 'g':
+            stop = 80
+        else:
+            stop = 50
+        created_traj = create_traj(dir=alph, stop_at=stop)
         save_traj(filename, created_traj)

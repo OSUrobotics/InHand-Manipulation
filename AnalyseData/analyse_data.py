@@ -169,7 +169,7 @@ def get_data(filename):
 
 
 if __name__ == '__main__':
-    dir = 'h'
+    dir = 'a'
     hand = 'new_hand'
     trial = 'human_filt_josh'
     # trial = 'expected_exp'

@@ -41,8 +41,8 @@ class Manipulator(SceneObject):
         self.next_info = None
         self.next_joint_poses = None
         self.action_type = self.action_type_JA
-        self.target_marker = Markers.Marker(color=[0, 1, 0]).set_marker_pose([0, 0, 0])
-        self.cp_marker = Markers.Marker().set_marker_pose([0, 0, 0])
+        # self.target_marker = Markers.Marker(color=[0, 1, 0]).set_marker_pose([0, 0, 0])
+        # self.cp_marker = Markers.Marker().set_marker_pose([0, 0, 0])
         self.object_traj_data = []
         self.phase = None
         self.human_data_file_name = ''
@@ -424,7 +424,7 @@ class Manipulator(SceneObject):
             self.next_joint_poses = p.calculateInverseKinematics2(bodyUniqueId=self.gripper_id,
                                                                   endEffectorLinkIndices=self.end_effector_indices,
                                                                   targetPositions=self.next_info[2])
-            # l_dist_marker.set_marker_pose(self.next_info[2][0])
+            # l_dist_marker.set_marker_pose(self.next_info[0][0])
             self.move_fingers_to_pose(self.next_joint_poses, cube, abs_tol=1e-0, contact_check=False)
             j += 1
 

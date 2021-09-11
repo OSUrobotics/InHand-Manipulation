@@ -80,9 +80,14 @@ if __name__ == "__main__":
     #
     # (physicsClient, planeID, num_objects, gripperID, objectIDs) = setup.init_sim(args.path_to_gripper_sdf)
     (physicsClient, planeID, num_objects, gripperID, objectIDs) = setup.init_sim([args.path_to_gripper_urdf,
-                                                                                  args.path_to_object_sdf])
+                                                                                  args.path_to_object_urdf])
     objectID = objectIDs[0]
     setup.set_camera_view(args.camera_view)
+    print("\n#####@@@@@@@@##############################\nHERE1", p.getVisualShapeData(gripperID))
+    print("\nHERE2",p.getCollisionShapeData(gripperID, 0))
+    print("\nHERE3",p.getVisualShapeData(objectID))
+    print("\nHERE4", p.getCollisionShapeData(objectID, -1),"\n#####@@@@@@@@##############################\n")
+
     gripper = Manipulator.Manipulator(gripperID, args.open_fingers_pose, args.start_grasp_pose)
     cube = ObjectsInScene.SceneObject(objectID)
 

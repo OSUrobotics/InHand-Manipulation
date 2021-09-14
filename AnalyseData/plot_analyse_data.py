@@ -94,9 +94,9 @@ def plot_multiple_data(data, labels, title, dir, save=False, filename='', track=
 
     if save:
         if track:
-            plt.savefig('TrackPlots/Tries/{}'.format(filename))
+            plt.savefig('TrackPlots/Even Better/{}'.format(filename))
         else:
-            plt.savefig('Plots/Tries/{}'.format(filename))
+            plt.savefig('Plots/Even Better/{}'.format(filename))
     else:
         plt.show()
 
@@ -177,9 +177,9 @@ def set_axis_limits(dir):
 
 
 if __name__ == '__main__':
-    directory = '/Users/asar/PycharmProjects/InHand-Manipulation/AnalyseData/Data/Trial Data/Tries'
+    directory = '/Users/asar/PycharmProjects/InHand-Manipulation/AnalyseData/Data/Trial Data/Even Better'
     # direction = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-    direction = ['e']
+    direction = ['b']
     subject = 'sub1'
     plot_type = 'single'
     # plot_type = 'combined_all'
@@ -195,8 +195,8 @@ if __name__ == '__main__':
         trial = ''
         track = False
         save_trial = plot_type+'_plots_'+subject
-    dp = 10
-    step = 5
+    dp = 1
+    step = 7
     kp = None
     kd = None
     if len(direction) > 1:

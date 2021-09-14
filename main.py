@@ -13,6 +13,7 @@ import gui
 from PyQt5.QtWidgets import QApplication
 # import plot
 import csv
+import Markers
 
 
 def load_from_file(filename, parser, namespace):
@@ -99,6 +100,18 @@ if __name__ == "__main__":
         type = 'human'
     parse_file_name = args.path_to_human_data.split('/')[split_at].split('.')[0]
     gripper.hand_type = 'new_hand_{}'.format(type)
+
+    # gripper_base_pos, gripper_base_orn = p.getBasePositionAndOrientation(gripperID)
+    # object_base_pos, object_base_orn = p.getBasePositionAndOrientation(objectID)
+    #
+    # gripper_marker = Markers.Marker()
+    # object_marker = Markers.Marker()
+    # object_base_pos = [object_base_pos[0] + 0.0066875, object_base_pos[1], object_base_pos[2]]
+    # gripper_marker.set_marker_pose(gripper_base_pos)
+    # object_marker.set_marker_pose(object_base_pos)
+    #
+    # print(gripper_base_pos, object_base_pos)
+
     # Moving code
     gripper.phase = 'Open'
     gripper.human_data_file_name = parse_file_name

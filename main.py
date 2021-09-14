@@ -113,6 +113,14 @@ if __name__ == "__main__":
     done_grasp, contact_points = gripper.move_fingers_to_pose(gripper.start_grasp_pose, cube, abs_tol=0.05)
     print("Complete Grasp Object? {}, Contact  points: {}".format(done_grasp, contact_points))
 
+    roll_fric = 0.01
+    p.changeDynamics(objectID, -1, mass=0.1, rollingFriction=roll_fric)
+    p.changeDynamics(gripperID, 1, rollingFriction=roll_fric)
+    p.changeDynamics(gripperID, 3, rollingFriction=roll_fric)
+    print("\n\n{}\n\n".format(p.getDynamicsInfo(objectID, -1)))
+    p.getDynamicsInfo(gripperID, 1)
+    print("\n\n{}\n\n".format(p.getDynamicsInfo(gripperID, 1)))
+
     gripper.phase = 'Move'
     done_mov_obj = gripper.manipulate_object(cube, human_data, contact_check=True)
     time.sleep(2)

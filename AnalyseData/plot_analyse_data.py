@@ -50,7 +50,7 @@ def plot_single_data(df, x=0, y=1, scale=1.0, color='red', track=True):
         y_data.append(scale * line[y])
     # print("DATA 0: {},\n DATA 1: {},\n DATA: {}".format(data[:][0], data[1], data))
     if track:
-        p = plt.scatter(x_data, y_data, c=color)
+        p = plt.plot(x_data, y_data, color)
     else:
         p = plt.plot(x_data, y_data, color)
     return p
@@ -71,7 +71,7 @@ def plot_multiple_data(data, labels, title, dir, save=False, filename='', track=
     for data_to_plot in data:
         if track:
             plot_pointers.append(plot_single_data(df=data_to_plot[0], x=data_to_plot[1], y=data_to_plot[2],
-                                                  scale=data_to_plot[3], color=data_to_plot[5],track=track))
+                                                  scale=data_to_plot[3], color=data_to_plot[5],track=track)[0])
         else:
             plot_pointers.append(plot_single_data(df=data_to_plot[0], x=data_to_plot[1], y=data_to_plot[2],
                                                   scale=data_to_plot[3], color=data_to_plot[5],track=track)[0])
@@ -94,9 +94,9 @@ def plot_multiple_data(data, labels, title, dir, save=False, filename='', track=
 
     if save:
         if track:
-            plt.savefig('TrackPlots/{}'.format(filename))
+            plt.savefig('TrackPlots/Tries/{}'.format(filename))
         else:
-            plt.savefig('Plots/{}'.format(filename))
+            plt.savefig('Plots/Tries/{}'.format(filename))
     else:
         plt.show()
 
@@ -136,18 +136,18 @@ def set_axis_limits(dir):
         plt.xlim([-0.006, 0.006])
     elif dir == 'b':
         limits_x = np.arange(0, 0.05, step_x)
-        limits_y = np.arange(0, 0.05, step_x)
+        limits_y = np.arange(-0.01, 0.05, step_x)
         plt.xlim([0, 0.05])
-        plt.ylim([0, 0.05])
+        plt.ylim([-0.01, 0.05])
     elif dir == 'c':
-        limits_x = np.arange(0, 0.08, step_x)
-        limits_y = np.arange(-0.004, 0.012, step_y)
-        plt.xlim([0, 0.08])
-        plt.ylim([-0.004, 0.012])
+        limits_x = np.arange(-0.008, 0.08, step_x)
+        limits_y = np.arange(-0.006, 0.012, step_y)
+        plt.xlim([-0.008, 0.08])
+        plt.ylim([-0.006, 0.012])
     elif dir == 'd':
-        limits_x = np.arange(0, 0.030, step_x)
+        limits_x = np.arange(0, 0.050, step_x)
         limits_y = np.arange(-0.04, 0.04, step_x)
-        plt.xlim([0, 0.03])
+        plt.xlim([0, 0.05])
         plt.ylim([-0.04, 0.04])
     elif dir == 'e':
         limits_x = np.arange(-0.002, 0.010, step_y)
@@ -155,10 +155,10 @@ def set_axis_limits(dir):
         plt.xlim([-0.002, 0.010])
         plt.ylim([-0.03, 0.01])
     elif dir == 'f':
-        limits_x = np.arange(-0.02, 0.0025, step_x)
-        limits_y = np.arange(-0.035, 0.005, step_x)
-        plt.xlim([-0.002, 0.0025])
-        plt.ylim([-0.035, 0.01])
+        limits_x = np.arange(-0.035, 0.0025, step_x)
+        limits_y = np.arange(-0.05, 0.005, step_x)
+        plt.xlim([-0.035, 0.0025])
+        plt.ylim([-0.05, 0.01])
     elif dir == 'g':
         limits_x = np.arange(-0.05, 0.0, step_x)
         limits_y = np.arange(-0.002, 0.012, step_y)
@@ -177,12 +177,12 @@ def set_axis_limits(dir):
 
 
 if __name__ == '__main__':
-    directory = '/Users/asar/PycharmProjects/InHand-Manipulation/AnalyseData/Data/Trial Data/Better'
+    directory = '/Users/asar/PycharmProjects/InHand-Manipulation/AnalyseData/Data/Trial Data/Tries'
     # direction = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-    direction = ['h']
+    direction = ['e']
     subject = 'sub1'
-    # plot_type = 'single'
-    plot_type = 'combined_all'
+    plot_type = 'single'
+    # plot_type = 'combined_all'
     trial_hum = 'human_'+subject
     trial_exp = 'expected_' + 'exp'
     hand = 'new_hand'
@@ -195,7 +195,7 @@ if __name__ == '__main__':
         trial = ''
         track = False
         save_trial = plot_type+'_plots_'+subject
-    dp = 5
+    dp = 10
     step = 5
     kp = None
     kd = None
@@ -259,8 +259,8 @@ if __name__ == '__main__':
             plot1 = [human_data_col, 0, 2, 1, 'Human Trial', 'blue']
             plot2 = [human_controller_data_col, 0, 1, 1, 'Controller from Human', 'red']
             plot3 = [expected_controller_data_col, 0, 1, 1, 'Controller from Expected', 'gold']
-            plot4 = [human_controller_data_col_other, 0, 1, 1, 'Controller from Human Other', 'm']
-            plot5 = [expected_controller_data_col_other, 0, 1, 1, 'Controller from Expected Other', 'c']
+            plot4 = [human_controller_data_col_other, 0, 1, 1, 'Controller from Human {} {}'.format(dp_other, step_other), 'm']
+            plot5 = [expected_controller_data_col_other, 0, 1, 1, 'Controller from Expected {} {}'.format(dp_other, step_other), 'c']
 
             all_plots = [plot1, plot2, plot3, plot4, plot5]
 

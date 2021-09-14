@@ -60,8 +60,8 @@ class SceneObject:
 
         # Non -normalized data
         # print(data[0], data[1], data[2])
-        self.next_pos = (data[1] * scale, 0.0, data[2] * scale)
-        orn_eul = [0, radians(data[3]), 0]
+        self.next_pos = (data[4] * scale, 0.0, data[5] * scale)
+        orn_eul = [0, radians(data[6]), 0]
 
         self.next_orn = p.getQuaternionFromEuler(orn_eul)
 

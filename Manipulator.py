@@ -57,7 +57,7 @@ class Manipulator(SceneObject):
         self.k_p = None
         self.k_d = None
         self.limit_data = 1
-        self.ep_step = 7
+        self.ep_step = 2
 
     # def __repr__(self):
     #     return "This Gripper has {} joints called {}".format(self.num_joints, self.joint_dict_with_base.keys())

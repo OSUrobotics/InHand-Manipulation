@@ -85,11 +85,13 @@ if __name__ == "__main__":
     objectID = objectIDs[0]
     setup.set_camera_view(args.camera_view)
     print("\n#####@@@@@@@@##############################\nHERE1", p.getVisualShapeData(gripperID))
-    print("\nHERE2",p.getCollisionShapeData(gripperID, 0))
-    print("\nHERE3",p.getVisualShapeData(objectID))
+    print("\nHERE2", p.getCollisionShapeData(gripperID, 0))
+    print("\nHERE3", p.getVisualShapeData(objectID))
     print("\nHERE4", p.getCollisionShapeData(objectID, -1),"\n#####@@@@@@@@##############################\n")
 
     gripper = Manipulator.Manipulator(gripperID, args.open_fingers_pose, args.start_grasp_pose)
+    gripper.limit_data = 2
+    gripper.ep_step = 3
     cube = ObjectsInScene.SceneObject(objectID)
 
     if 'exp' in args.path_to_human_data:
@@ -135,6 +137,7 @@ if __name__ == "__main__":
     print("\n\n{}\n\n".format(p.getDynamicsInfo(gripperID, 1)))
 
     gripper.phase = 'Move'
+    p.createConstraint(gripperID, gripper.joint_dict[b'l_distal_pin'], objectID, -1, p.JOINT_PRISMATIC, [0, 0, 0], p.getJointState(gripperID, gripper.joint_dict[b'l_distal_pin'])[0], p.getJointState(gripperID, gripper.joint_dict[b'l_distal_pin'])[0])
     done_mov_obj = gripper.manipulate_object(cube, human_data, contact_check=True)
     time.sleep(2)
     # plot.plot_human_and_controller_data(human_data, gripper.object_traj_data)

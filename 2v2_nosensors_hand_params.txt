@@ -1,14 +1,14 @@
 "PASS ARGUMENTS HERE:"
 --camera_view=TOP
---path_to_human_data=Human Study Data/asterisk_test_data_for_anjali/trial_paths/not_normalized/sub1_2v2_b_n_1.csv
+--path_to_human_data=Human Study Data/asterisk_test_data_for_anjali/trial_paths/not_normalized/sub1_2v2_a_n_1.csv
 --open_fingers_pose=1.57
 --open_fingers_pose=0.0
 --open_fingers_pose=-1.57
 --open_fingers_pose=0.0
---start_grasp_pose=0.6
---start_grasp_pose=-0.9
---start_grasp_pose=-0.6
---start_grasp_pose=0.9
+--start_grasp_pose=1.04
+--start_grasp_pose=-1.57
+--start_grasp_pose=-1.04
+--start_grasp_pose=1.57
 --path_to_gripper_sdf=ExampleSimWorld-Josh/2v2_hands/999/testing.sdf
 --path_to_object_sdf=ExampleSimWorld-Josh/2v2_hands/999/object_only.sdf
 --path_to_gripper_urdf=ExampleSimWorld-Josh/2v2_nosensors_hand/2v2_nosensors.urdf

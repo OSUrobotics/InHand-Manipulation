@@ -179,7 +179,7 @@ def set_axis_limits(dir):
 if __name__ == '__main__':
     directory = '/Users/asar/PycharmProjects/InHand-Manipulation/AnalyseData/Data/Trial Data/Even Better'
     # direction = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-    direction = ['b']
+    direction = ['c']
     subject = 'sub1'
     plot_type = 'single'
     # plot_type = 'combined_all'
@@ -195,8 +195,8 @@ if __name__ == '__main__':
         trial = ''
         track = False
         save_trial = plot_type+'_plots_'+subject
-    dp = 1
-    step = 7
+    dp = 2
+    step = 3
     kp = None
     kd = None
     if len(direction) > 1:

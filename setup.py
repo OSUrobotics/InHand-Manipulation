@@ -62,7 +62,7 @@ def load_urdfs(filenames_list):
     :return: gripper_id: Reference variable to gripper in scene(Should be the first value returned by loadSDF)
     :return: obj_id: Reference variable to object(s) in scene
     """
-    gripper_id = p.loadURDF(filenames_list[0], useFixedBase=True, basePosition=[0.0, 0.0, 0.04])
+    gripper_id = p.loadURDF(filenames_list[0], useFixedBase=True, basePosition=[0.0, 0.0, 0.08])
     p.changeVisualShape(gripper_id, -1, rgbaColor=[0.3, 0.3, 0.3, 1])
     p.changeVisualShape(gripper_id, 0, rgbaColor=[1, 0.5, 0, 1])
     p.changeVisualShape(gripper_id, 1, rgbaColor=[0.3, 0.3, 0.3, 1])
@@ -77,7 +77,8 @@ def load_urdfs(filenames_list):
             # objects.append(p.loadSDF(filenames_list[i])[0])
             # print("OBJECTS: {}".format(objects[i-1]))
             # p.resetBasePositionAndOrientation(objects[i-1], [0.00, 0.17, 0.0], [0.706825181105366, 0.0, 0.0, 0.7073882691671998])
-            objects.append(p.loadURDF(filenames_list[i], basePosition=[0.0, 0.1615, 0], useFixedBase=False))
+            # objects.append(p.loadURDF(filenames_list[i], basePosition=[0.0, 0.1615, 0], useFixedBase=False))
+            objects.append(p.loadURDF(filenames_list[i], basePosition=[0.0, 0.17, 0], useFixedBase=False))
     else:
         objects = None
     p.changeVisualShape(objects[0], -1, rgbaColor=[0, 0.75, 0.5, 1])

@@ -140,6 +140,7 @@ class Manipulator(SceneObject):
                 done = True
             else:
                 done = False
+            print(self.curr_joint_poses)
             return done
 
     def get_contact_points(self, cube_id):
@@ -153,7 +154,7 @@ class Manipulator(SceneObject):
         for i in range(0, len(self.end_effector_indices)):
             contact_points_info = p.getContactPoints(cube_id, self.gripper_id, linkIndexB=self.end_effector_indices[i])
             try:
-                contact_points.append(contact_points_info[0][6])
+                contact_points.append(contact_points_info[0][5])
 
             except IndexError:
                 contact_points.append(None)

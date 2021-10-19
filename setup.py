@@ -77,7 +77,7 @@ def load_urdfs(filenames_list):
             # objects.append(p.loadSDF(filenames_list[i])[0])
             # print("OBJECTS: {}".format(objects[i-1]))
             # p.resetBasePositionAndOrientation(objects[i-1], [0.00, 0.17, 0.0], [0.706825181105366, 0.0, 0.0, 0.7073882691671998])
-            # objects.append(p.loadURDF(filenames_list[i], basePosition=[0.0, 0.1615, 0], useFixedBase=False))
+            # objects.append(p.loadURDF(filenames_list[i], basePosition=[0.0, 0.191, 0], useFixedBase=False))
             objects.append(p.loadURDF(filenames_list[i], basePosition=[0.0, 0.17, 0], useFixedBase=False))
     else:
         objects = None
@@ -113,8 +113,10 @@ def set_camera_view(view="TOP"):
     :param view: takes two keywords ("TOP" or "SIDE")  indicative of scene view
     """
     if view == "TOP":
-        p.resetDebugVisualizerCamera(cameraDistance=.02, cameraYaw=0, cameraPitch=-89.9,
-                                     cameraTargetPosition=[0, 0.1, 0.5]) #cameraTargetPosition=[0.1, 0, 0.5])
+        p.resetDebugVisualizerCamera(cameraDistance=0.5, cameraYaw=180.0, cameraPitch=-90.0                                                                ,# 89.99999,
+                                     cameraTargetPosition=[0, 0.0, 0.08]) #cameraTargetPosition=[0.1, 0, 0.5])
+        # p.resetDebugVisualizerCamera(cameraDistance=.02, cameraYaw=0, cameraPitch=-89.9,
+        #                              cameraTargetPosition=[0, 0.1, 0.5]) #cameraTargetPosition=[0.1, 0, 0.5])
     elif view == "SIDE":
         p.resetDebugVisualizerCamera(cameraDistance=.2, cameraYaw=0, cameraPitch=0, cameraTargetPosition=[.1, 0, .1])
     else:

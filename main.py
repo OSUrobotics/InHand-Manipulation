@@ -5,15 +5,54 @@ import pybullet as p
 import time
 import Manipulator
 import argparse
-import matplotlib.pyplot as plt
-import gym
-import gym_env_files
-import numpy as np
-import gui
-from PyQt5.QtWidgets import QApplication
-# import plot
-import csv
 import Markers
+
+
+def get_start_pose_from_dir(direction):
+    if direction == 'a':
+        l_prox, l_dist = 1.04, -1.57
+        r_prox, r_dist = -l_prox, -l_dist
+        start_contact_pose = [l_prox, l_dist, r_prox, r_dist]
+
+    elif direction == 'b':
+        l_prox, l_dist = 1.04, -1.57
+        r_prox, r_dist = -l_prox, -l_dist
+        start_contact_pose = [l_prox, l_dist, r_prox, r_dist]
+
+    elif direction == 'c':
+        l_prox, l_dist = 0.99, -1.52 # 0.25, -0.5
+        r_prox, r_dist = -0.78, 1.403 # -0.909, 1.52
+        start_contact_pose = [l_prox, l_dist, r_prox, r_dist]
+
+    elif direction == 'd':
+        l_prox, l_dist = 1.04, -1.57
+        r_prox, r_dist = -l_prox, -l_dist
+        start_contact_pose = [l_prox, l_dist, r_prox, r_dist]
+
+    elif direction == 'e':
+        l_prox, l_dist = 1.04, -1.57
+        r_prox, r_dist = -l_prox, -l_dist
+        start_contact_pose = [l_prox, l_dist, r_prox, r_dist]
+
+    elif direction == 'f':
+        l_prox, l_dist = 1.04, -1.57
+        r_prox, r_dist = -l_prox, -l_dist
+        start_contact_pose = [l_prox, l_dist, r_prox, r_dist]
+
+    elif direction == 'g':
+        l_prox, l_dist = 1.04, -1.57
+        r_prox, r_dist = -l_prox, -l_dist
+        start_contact_pose = [l_prox, l_dist, r_prox, r_dist]
+
+    elif direction == 'h':
+        l_prox, l_dist = 1.04, -1.57
+        r_prox, r_dist = -l_prox, -l_dist
+        start_contact_pose = [l_prox, l_dist, r_prox, r_dist]
+
+    else:
+        print("Invalid Direction Given!!!")
+        raise KeyError
+    return start_contact_pose
 
 
 def load_from_file(filename, parser, namespace):
@@ -24,8 +63,10 @@ def load_from_file(filename, parser, namespace):
     parser.add_argument("--path_to_object_sdf", default='ExampleSimWorld-Josh/2v2_hands/999/object_only.sdf')
     parser.add_argument("--open_fingers_pose", action='append', type=float)
     parser.add_argument("--start_grasp_pose", action='append', type=float)
-    parser.add_argument("--path_to_gripper_urdf", default='ExampleSimWorld-Josh/2v2_test_hand_anjali/2v2_test_hand.urdf')
-    parser.add_argument("--path_to_object_urdf", default='ExampleSimWorld-Josh/2v2_test_hand_object_anjali/2v2_test_hand_cuboid_medium.urdf')
+    parser.add_argument("--path_to_gripper_urdf", default='ExampleSimWorld-Josh/2v2_test_hand_anjali/2v2_test_hand.urdf'
+                        )
+    parser.add_argument("--path_to_object_urdf", default='ExampleSimWorld-Josh/2v2_test_hand_object_anjali/2v2_test_'
+                                                         'hand_cuboid_small.urdf')
 
     with open(filename, 'r') as f:
         for line in f:
@@ -65,34 +106,18 @@ if __name__ == "__main__":
     import_arguments(args, parser)
     print("ARGUMENTS PASSED: {}".format(args))
 
-    # print("$$$$", parse_file_name)
-
     # WITHOUT GYM:
     # Initial arguments and setup
     human_data = setup.read_file(args.path_to_human_data)
-    # if "Yes" in args.plot_human_data:
-    #     print("PLOT? {}".format(args.plot_human_data))
-    #     plot.plot_human_data(human_data)
 
     # # Only plotting pre-existing files
     controller_data = setup.read_file('controller.csv')
-    # print("CONTROLLER DATA: {}".format(controller_data))
-    # plot.plot_human_and_controller_data_from_file(human_data, controller_data)
-    #
+
     # (physicsClient, planeID, num_objects, gripperID, objectIDs) = setup.init_sim(args.path_to_gripper_sdf)
     (physicsClient, planeID, num_objects, gripperID, objectIDs) = setup.init_sim([args.path_to_gripper_urdf,
                                                                                   args.path_to_object_urdf])
     objectID = objectIDs[0]
     setup.set_camera_view(args.camera_view)
-    print("\n#####@@@@@@@@##############################\nHERE1", p.getVisualShapeData(gripperID))
-    print("\nHERE2", p.getCollisionShapeData(gripperID, 0))
-    print("\nHERE3", p.getVisualShapeData(objectID))
-    print("\nHERE4", p.getCollisionShapeData(objectID, -1),"\n#####@@@@@@@@##############################\n")
-
-    gripper = Manipulator.Manipulator(gripperID, args.open_fingers_pose, args.start_grasp_pose)
-    gripper.limit_data = 2
-    gripper.ep_step = 3
-    cube = ObjectsInScene.SceneObject(objectID)
 
     if 'exp' in args.path_to_human_data:
         split_at = 2
@@ -101,18 +126,14 @@ if __name__ == "__main__":
         split_at = 4
         type = 'human'
     parse_file_name = args.path_to_human_data.split('/')[split_at].split('.')[0]
-    gripper.hand_type = 'new_hand_{}'.format(type)
+    man_dir = parse_file_name.split('_')[2]
+    start_pose = get_start_pose_from_dir(man_dir)
+    gripper = Manipulator.Manipulator(gripperID, args.open_fingers_pose, start_pose)
+    gripper.limit_data = 1
+    gripper.ep_step = 2
+    cube = ObjectsInScene.SceneObject(objectID)
 
-    # gripper_base_pos, gripper_base_orn = p.getBasePositionAndOrientation(gripperID)
-    # object_base_pos, object_base_orn = p.getBasePositionAndOrientation(objectID)
-    #
-    # gripper_marker = Markers.Marker()
-    # object_marker = Markers.Marker()
-    # object_base_pos = [object_base_pos[0] + 0.0066875, object_base_pos[1], object_base_pos[2]]
-    # gripper_marker.set_marker_pose(gripper_base_pos)
-    # object_marker.set_marker_pose(object_base_pos)
-    #
-    # print(gripper_base_pos, object_base_pos)
+    gripper.hand_type = 'new_hand_{}'.format(type)
 
     # Moving code
     gripper.phase = 'Open'
@@ -125,22 +146,38 @@ if __name__ == "__main__":
     p.resetBasePositionAndOrientation(objectID, cube.start_pos, cube.start_orn)
 
     gripper.phase = 'Close'
-    done_grasp, contact_points = gripper.move_fingers_to_pose(gripper.start_grasp_pose, cube, abs_tol=0.05)
+    done_grasp, contact_points = gripper.move_fingers_to_pose(gripper.start_grasp_pose, cube, abs_tol=0.001)
     print("Complete Grasp Object? {}, Contact  points: {}".format(done_grasp, contact_points))
 
     roll_fric = 0.01
     p.changeDynamics(objectID, -1, mass=0.1, rollingFriction=roll_fric)
     p.changeDynamics(gripperID, 1, rollingFriction=roll_fric)
     p.changeDynamics(gripperID, 3, rollingFriction=roll_fric)
-    print("\n\n{}\n\n".format(p.getDynamicsInfo(objectID, -1)))
-    p.getDynamicsInfo(gripperID, 1)
-    print("\n\n{}\n\n".format(p.getDynamicsInfo(gripperID, 1)))
+
+    l_cp_info = p.getContactPoints(objectID, gripperID, linkIndexB=gripper.joint_dict[b'l_distal_pin'])
+    r_cp_info = p.getContactPoints(objectID, gripperID, linkIndexB=gripper.joint_dict[b'r_distal_pin'])
+    l_link_state = p.getLinkState(gripperID, gripper.joint_dict[b'l_distal_pin'])
+    r_link_state = p.getLinkState(gripperID, gripper.joint_dict[b'r_distal_pin'])
+    l_link_origin = p.invertTransform(l_link_state[0], l_link_state[1])
+    r_link_origin = p.invertTransform(r_link_state[0], r_link_state[1])
+    l_link_l_cp = p.multiplyTransforms(l_link_origin[0], l_link_origin[1], l_cp_info[0][5], cube.curr_orn)
+    r_link_r_cp = p.multiplyTransforms(r_link_origin[0], r_link_origin[1], r_cp_info[0][5], cube.curr_orn)
+
+    cube_origin = p.invertTransform(cube.curr_pos, cube.curr_orn)
+    cube_l_cp = p.multiplyTransforms(cube_origin[0], cube_origin[1], l_cp_info[0][5], cube.curr_orn)
+    cube_r_cp = p.multiplyTransforms(cube_origin[0], cube_origin[1], r_cp_info[0][5], cube.curr_orn)
+
+
+    p.createConstraint(objectID, -1, gripperID, gripper.joint_dict[b'l_distal_pin'], p.JOINT_PRISMATIC, [0.0, 0.0, 0],
+                       cube_l_cp[0], l_link_l_cp[0], parentFrameOrientation=cube_l_cp[1],
+                       childFrameOrientation=l_link_l_cp[1])
+    p.createConstraint(objectID, -1, gripperID, gripper.joint_dict[b'r_distal_pin'], p.JOINT_PRISMATIC, [0.0, 0.0, 0],
+                       cube_r_cp[0], r_link_r_cp[0], parentFrameOrientation=cube_r_cp[1],
+                       childFrameOrientation=r_link_r_cp[1])
 
     gripper.phase = 'Move'
-    p.createConstraint(gripperID, gripper.joint_dict[b'l_distal_pin'], objectID, -1, p.JOINT_PRISMATIC, [0, 0, 0], p.getJointState(gripperID, gripper.joint_dict[b'l_distal_pin'])[0], p.getJointState(gripperID, gripper.joint_dict[b'l_distal_pin'])[0])
     done_mov_obj = gripper.manipulate_object(cube, human_data, contact_check=True)
     time.sleep(2)
-    # plot.plot_human_and_controller_data(human_data, gripper.object_traj_data)
 
 # #WITH GYM:
 #

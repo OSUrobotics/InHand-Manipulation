@@ -93,10 +93,12 @@ def plot_multiple_data(data, labels, title, dir, save=False, filename='', track=
         set_axis_limits(dir)
 
     if save:
+        # director = "correct angles"
+        director = "Even Better"
         if track:
-            plt.savefig('TrackPlots/Even Better/{}'.format(filename))
+            plt.savefig('TrackPlots/'+director+'/{}'.format(filename))
         else:
-            plt.savefig('Plots/Even Better/{}'.format(filename))
+            plt.savefig('Plots/'+director+'/{}'.format(filename))
     else:
         plt.show()
 
@@ -129,6 +131,7 @@ def plot_track_human_and_controller(data):
 def set_axis_limits(dir):
     step_x = 0.005
     step_y = 0.001
+    # step_y = 0.005
     # limit =
     if dir == 'a':
         limits_x = np.arange(-0.006, 0.006, step_y)
@@ -141,9 +144,10 @@ def set_axis_limits(dir):
         plt.ylim([-0.01, 0.05])
     elif dir == 'c':
         limits_x = np.arange(-0.008, 0.08, step_x)
-        limits_y = np.arange(-0.006, 0.012, step_y)
+        limits_y = np.arange(-0.012, 0.012, step_y)
         plt.xlim([-0.008, 0.08])
-        plt.ylim([-0.006, 0.012])
+        # plt.ylim([-0.008, 0.08])
+        plt.ylim([-0.012, 0.012])
     elif dir == 'd':
         limits_x = np.arange(0, 0.050, step_x)
         limits_y = np.arange(-0.04, 0.04, step_x)
@@ -195,8 +199,8 @@ if __name__ == '__main__':
         trial = ''
         track = False
         save_trial = plot_type+'_plots_'+subject
-    dp = 2
-    step = 3
+    dp = 1
+    step = 2
     kp = None
     kd = None
     if len(direction) > 1:

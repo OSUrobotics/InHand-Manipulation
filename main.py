@@ -131,10 +131,18 @@ if __name__ == "__main__":
     start_pose = get_start_pose_from_dir(man_dir)
     gripper = Manipulator.Manipulator(gripperID, args.open_fingers_pose, start_pose)
     gripper.limit_data = 1
-    gripper.ep_step = 1
+    gripper.ep_step = 2
     cube = ObjectsInScene.SceneObject(objectID)
 
     gripper.hand_type = 'new_hand_{}'.format(type)
+
+    # Marker to test Ray test:
+    ray_test_marker_start = Markers.Marker()
+    ray_test_marker_start.set_marker_pose([0.05, 0, 0.008])
+    ray_test_marker_end = Markers.Marker()
+    ray_test_marker_end.set_marker_pose([0.05, 0.2, 0.008])
+
+
 
     # Moving code
     gripper.phase = 'Open'
@@ -155,26 +163,26 @@ if __name__ == "__main__":
     p.changeDynamics(gripperID, 1, rollingFriction=roll_fric)
     p.changeDynamics(gripperID, 3, rollingFriction=roll_fric)
 
-    l_cp_info = p.getContactPoints(objectID, gripperID, linkIndexB=gripper.joint_dict[b'l_distal_pin'])
-    r_cp_info = p.getContactPoints(objectID, gripperID, linkIndexB=gripper.joint_dict[b'r_distal_pin'])
-    l_link_state = p.getLinkState(gripperID, gripper.joint_dict[b'l_distal_pin'])
-    r_link_state = p.getLinkState(gripperID, gripper.joint_dict[b'r_distal_pin'])
-    l_link_origin = p.invertTransform(l_link_state[0], l_link_state[1])
-    r_link_origin = p.invertTransform(r_link_state[0], r_link_state[1])
-    l_link_l_cp = p.multiplyTransforms(l_link_origin[0], l_link_origin[1], l_cp_info[0][5], cube.curr_orn)
-    r_link_r_cp = p.multiplyTransforms(r_link_origin[0], r_link_origin[1], r_cp_info[0][5], cube.curr_orn)
-
-    cube_origin = p.invertTransform(cube.curr_pos, cube.curr_orn)
-    cube_l_cp = p.multiplyTransforms(cube_origin[0], cube_origin[1], l_cp_info[0][5], cube.curr_orn)
-    cube_r_cp = p.multiplyTransforms(cube_origin[0], cube_origin[1], r_cp_info[0][5], cube.curr_orn)
-
-
-    p.createConstraint(objectID, -1, gripperID, gripper.joint_dict[b'l_distal_pin'], p.JOINT_PRISMATIC, [0.0, 0.0, 0],
-                       cube_l_cp[0], l_link_l_cp[0], parentFrameOrientation=cube_l_cp[1],
-                       childFrameOrientation=l_link_l_cp[1])
-    p.createConstraint(objectID, -1, gripperID, gripper.joint_dict[b'r_distal_pin'], p.JOINT_PRISMATIC, [0.0, 0.0, 0],
-                       cube_r_cp[0], r_link_r_cp[0], parentFrameOrientation=cube_r_cp[1],
-                       childFrameOrientation=r_link_r_cp[1])
+    # l_cp_info = p.getContactPoints(objectID, gripperID, linkIndexB=gripper.joint_dict[b'l_distal_pin'])
+    # r_cp_info = p.getContactPoints(objectID, gripperID, linkIndexB=gripper.joint_dict[b'r_distal_pin'])
+    # l_link_state = p.getLinkState(gripperID, gripper.joint_dict[b'l_distal_pin'])
+    # r_link_state = p.getLinkState(gripperID, gripper.joint_dict[b'r_distal_pin'])
+    # l_link_origin = p.invertTransform(l_link_state[0], l_link_state[1])
+    # r_link_origin = p.invertTransform(r_link_state[0], r_link_state[1])
+    # l_link_l_cp = p.multiplyTransforms(l_link_origin[0], l_link_origin[1], l_cp_info[0][5], cube.curr_orn)
+    # r_link_r_cp = p.multiplyTransforms(r_link_origin[0], r_link_origin[1], r_cp_info[0][5], cube.curr_orn)
+    #
+    # cube_origin = p.invertTransform(cube.curr_pos, cube.curr_orn)
+    # cube_l_cp = p.multiplyTransforms(cube_origin[0], cube_origin[1], l_cp_info[0][5], cube.curr_orn)
+    # cube_r_cp = p.multiplyTransforms(cube_origin[0], cube_origin[1], r_cp_info[0][5], cube.curr_orn)
+    #
+    #
+    # p.createConstraint(objectID, -1, gripperID, gripper.joint_dict[b'l_distal_pin'], p.JOINT_PRISMATIC, [0.0, 0.0, 0],
+    #                    cube_l_cp[0], l_link_l_cp[0], parentFrameOrientation=cube_l_cp[1],
+    #                    childFrameOrientation=l_link_l_cp[1])
+    # p.createConstraint(objectID, -1, gripperID, gripper.joint_dict[b'r_distal_pin'], p.JOINT_PRISMATIC, [0.0, 0.0, 0],
+    #                    cube_r_cp[0], r_link_r_cp[0], parentFrameOrientation=cube_r_cp[1],
+    #                    childFrameOrientation=r_link_r_cp[1])
 
     gripper.phase = 'Move'
     done_mov_obj = gripper.manipulate_object(cube, human_data, contact_check=True)

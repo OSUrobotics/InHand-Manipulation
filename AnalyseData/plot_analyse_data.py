@@ -183,7 +183,7 @@ def set_axis_limits(dir):
 if __name__ == '__main__':
     directory = '/Users/asar/PycharmProjects/InHand-Manipulation/AnalyseData/Data/Trial Data/Even Better'
     # direction = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-    direction = ['b']
+    direction = ['c']
     subject = 'sub1'
     plot_type = 'single'
     # plot_type = 'combined_all'

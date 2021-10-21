@@ -160,7 +160,7 @@ class Manipulator(SceneObject):
                 contact_points.append(None)
             pass
 
-        print("CONTACT POINTS: {}".format(contact_points))
+        # print("CONTACT POINTS: {}".format(contact_points))
         return contact_points
 
     def check_for_contact(self, cube):
@@ -412,6 +412,8 @@ class Manipulator(SceneObject):
         # distal_pos = link[4])
         for line in data:
             print("ITERATION: {}".format(j))
+            distance = p.rayTest([0.05, 0, 0.008], [0.05, 0.2, 0.008])
+            print(distance)
             if j % self.limit_data != 0:
                 j += 1
                 continue
@@ -466,7 +468,9 @@ class Manipulator(SceneObject):
             cube_orn = p.getEulerFromQuaternion(cube_pose[1])
 
             if not self.only_first_entry and self.phase is 'Move':
-                self.cube_subtract_from_pos = cube_pose[0]
+                self.cube_subtract_from_pos = p.invertTransform(cube_pose[0], cube_pose[1])
+                # self.cube_subtract_from_pos = cube_pose[0]
+
                 self.only_first_entry = True
 
         else:
@@ -555,10 +559,14 @@ class Manipulator(SceneObject):
 
     def get_cube_in_start_pos(self, cube):
         if self.phase is 'Move' and self.cube_subtract_from_pos is not None:
-            cube_curr_pos = cube.get_curr_pose()[0]
-            new_pos = [cube_curr_pos[0] - self.cube_subtract_from_pos[0],
-                       cube_curr_pos[1] - self.cube_subtract_from_pos[1],
-                       cube_curr_pos[2] - self.cube_subtract_from_pos[2]]
+            # cube_curr_pos = cube.get_curr_pose()[0]
+            # new_pos = [cube_curr_pos[0] - self.cube_subtract_from_pos[0],
+            #            cube_curr_pos[1] - self.cube_subtract_from_pos[1],
+            #            cube_curr_pos[2] - self.cube_subtract_from_pos[2]]
+            cube_curr_pos = cube.get_curr_pose()
+            new_pose = p.multiplyTransforms(self.cube_subtract_from_pos[0], self.cube_subtract_from_pos[1],
+                                            cube_curr_pos[0], cube_curr_pos[1])
+            new_pos = [new_pose[0][0], new_pose[0][1], new_pose[0][2]]
         else:
             new_pos = None
         self.add_column(column_name='Cube_pos_in_start_pos', column_data=new_pos)

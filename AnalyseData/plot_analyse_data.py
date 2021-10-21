@@ -138,9 +138,9 @@ def set_axis_limits(dir):
         limits_y = np.arange(0, 0.05, step_x)
         plt.xlim([-0.006, 0.006])
     elif dir == 'b':
-        limits_x = np.arange(0, 0.05, step_x)
+        limits_x = np.arange(0, 0.08, step_x)
         limits_y = np.arange(-0.01, 0.05, step_x)
-        plt.xlim([0, 0.05])
+        plt.xlim([0, 0.08])
         plt.ylim([-0.01, 0.05])
     elif dir == 'c':
         limits_x = np.arange(-0.008, 0.08, step_x)
@@ -183,7 +183,7 @@ def set_axis_limits(dir):
 if __name__ == '__main__':
     directory = '/Users/asar/PycharmProjects/InHand-Manipulation/AnalyseData/Data/Trial Data/Even Better'
     # direction = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-    direction = ['c']
+    direction = ['b']
     subject = 'sub1'
     plot_type = 'single'
     # plot_type = 'combined_all'

@@ -15,11 +15,12 @@ def get_start_pose_from_dir(direction):
         start_contact_pose = [l_prox, l_dist, r_prox, r_dist]
 
     elif direction == 'b':
-        l_prox, l_dist = 1.04, -1.57
+        l_prox, l_dist = 0.92, -1.54
         r_prox, r_dist = -l_prox, -l_dist
         start_contact_pose = [l_prox, l_dist, r_prox, r_dist]
 
     elif direction == 'c':
+        # Josh n c 4
         l_prox, l_dist = 0.99, -1.52 # 0.25, -0.5
         r_prox, r_dist = -0.78, 1.403 # -0.909, 1.52
         start_contact_pose = [l_prox, l_dist, r_prox, r_dist]
@@ -130,7 +131,7 @@ if __name__ == "__main__":
     start_pose = get_start_pose_from_dir(man_dir)
     gripper = Manipulator.Manipulator(gripperID, args.open_fingers_pose, start_pose)
     gripper.limit_data = 1
-    gripper.ep_step = 2
+    gripper.ep_step = 1
     cube = ObjectsInScene.SceneObject(objectID)
 
     gripper.hand_type = 'new_hand_{}'.format(type)

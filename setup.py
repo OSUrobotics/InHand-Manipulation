@@ -113,7 +113,7 @@ def set_camera_view(view="TOP"):
     :param view: takes two keywords ("TOP" or "SIDE")  indicative of scene view
     """
     if view == "TOP":
-        p.resetDebugVisualizerCamera(cameraDistance=0.5, cameraYaw=180.0, cameraPitch=-90.0                                                                ,# 89.99999,
+        p.resetDebugVisualizerCamera(cameraDistance=0.5, cameraYaw=0.0, cameraPitch=-89.9999                                                                ,# 89.99999,
                                      cameraTargetPosition=[0, 0.0, 0.08]) #cameraTargetPosition=[0.1, 0, 0.5])
         # p.resetDebugVisualizerCamera(cameraDistance=.02, cameraYaw=0, cameraPitch=-89.9,
         #                              cameraTargetPosition=[0, 0.1, 0.5]) #cameraTargetPosition=[0.1, 0, 0.5])

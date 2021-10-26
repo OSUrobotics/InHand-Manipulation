@@ -134,9 +134,10 @@ def set_axis_limits(dir):
     # step_y = 0.005
     # limit =
     if dir == 'a':
-        limits_x = np.arange(-0.006, 0.006, step_y)
-        limits_y = np.arange(0, 0.05, step_x)
-        plt.xlim([-0.006, 0.006])
+        return plt
+        # limits_x = np.arange(-0.006, 0.006, step_y)
+        # limits_y = np.arange(0, 0.05, step_x)
+        # plt.xlim([-0.006, 0.006])
     elif dir == 'b':
         return plt
         # limits_x = np.arange(0, 0.08, step_x)
@@ -151,26 +152,30 @@ def set_axis_limits(dir):
         # # plt.ylim([-0.008, 0.08])
         # plt.ylim([-0.012, 0.012])
     elif dir == 'd':
-        limits_x = np.arange(0, 0.050, step_x)
-        limits_y = np.arange(-0.04, 0.04, step_x)
-        plt.xlim([0, 0.05])
-        plt.ylim([-0.04, 0.04])
+        return plt
+        # limits_x = np.arange(0, 0.050, step_x)
+        # limits_y = np.arange(-0.04, 0.04, step_x)
+        # plt.xlim([0, 0.05])
+        # plt.ylim([-0.04, 0.04])
     elif dir == 'e':
-        limits_x = np.arange(-0.002, 0.010, step_y)
-        limits_y = np.arange(-0.030, 0.010, step_x)
-        plt.xlim([-0.002, 0.010])
-        plt.ylim([-0.03, 0.01])
+        return plt
+        # limits_x = np.arange(-0.002, 0.010, step_y)
+        # limits_y = np.arange(-0.030, 0.010, step_x)
+        # plt.xlim([-0.002, 0.010])
+        # plt.ylim([-0.03, 0.01])
     elif dir == 'f':
         limits_x = np.arange(-0.035, 0.0025, step_x)
         limits_y = np.arange(-0.05, 0.005, step_x)
         plt.xlim([-0.035, 0.0025])
         plt.ylim([-0.05, 0.01])
     elif dir == 'g':
-        limits_x = np.arange(-0.05, 0.0, step_x)
-        limits_y = np.arange(-0.002, 0.012, step_y)
+        return plt
+        # limits_x = np.arange(-0.05, 0.0, step_x)
+        # limits_y = np.arange(-0.002, 0.012, step_y)
     elif dir == 'h':
-        limits_x = np.arange(-0.03, 0.0, step_x)
-        limits_y = np.arange(0.0, 0.03, step_x)
+        return plt
+        # limits_x = np.arange(-0.03, 0.0, step_x)
+        # limits_y = np.arange(0.0, 0.03, step_x)
     else:
         print("Wrong Direction!")
         raise ValueError
@@ -185,7 +190,7 @@ def set_axis_limits(dir):
 if __name__ == '__main__':
     directory = '/Users/asar/PycharmProjects/InHand-Manipulation/AnalyseData/Data/Trial Data/Even Better'
     # direction = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-    direction = ['c']
+    direction = ['e']
     subject = 'sub1'
     plot_type = 'single'
     # plot_type = 'combined_all'
@@ -244,7 +249,7 @@ if __name__ == '__main__':
             plot7 = [link_data_l, 0, 1, [1, 1], 'link_L', 'pink']
             plot8 = [link_data_r, 0, 1, [1, 1], 'link_R', 'yellow']
 
-            all_plots = [plot1, plot2] #, plot5, plot6, plot3, plot4]#, plot7, plot8]
+            all_plots = [plot1, plot2]#, plot5, plot6, plot3, plot4]#, plot7, plot8]
         else:
             saved_data_controller_from_human = directory+'/{}_{}_2v2_{}_n_{}_kp{}_kd{}_dp{}_step{}_save_data.csv'.\
                 format(hand, trial_hum, dir, trial_num, kp, kd, dp, step)

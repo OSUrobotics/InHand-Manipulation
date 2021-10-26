@@ -10,7 +10,7 @@ import Markers
 
 def get_start_pose_from_dir(direction):
     if direction == 'a':
-        l_prox, l_dist = 1.04, -1.57
+        l_prox, l_dist = 0.92, -1.54
         r_prox, r_dist = -l_prox, -l_dist
         start_contact_pose = [l_prox, l_dist, r_prox, r_dist]
 
@@ -26,27 +26,27 @@ def get_start_pose_from_dir(direction):
         start_contact_pose = [l_prox, l_dist, r_prox, r_dist]
 
     elif direction == 'd':
-        l_prox, l_dist = 1.04, -1.57
+        l_prox, l_dist = 0.92, -1.54
         r_prox, r_dist = -l_prox, -l_dist
         start_contact_pose = [l_prox, l_dist, r_prox, r_dist]
 
     elif direction == 'e':
-        l_prox, l_dist = 1.04, -1.57
+        l_prox, l_dist = 0.35, -0.45
         r_prox, r_dist = -l_prox, -l_dist
         start_contact_pose = [l_prox, l_dist, r_prox, r_dist]
 
     elif direction == 'f':
-        l_prox, l_dist = 1.04, -1.57
-        r_prox, r_dist = -l_prox, -l_dist
+        l_prox, l_dist = 0.99, -1.52
+        r_prox, r_dist = -0.78, 1.403
         start_contact_pose = [l_prox, l_dist, r_prox, r_dist]
 
     elif direction == 'g':
-        l_prox, l_dist = 1.04, -1.57
-        r_prox, r_dist = -l_prox, -l_dist
+        l_prox, l_dist = 0.78, -1.403
+        r_prox, r_dist = -0.99, 1.52
         start_contact_pose = [l_prox, l_dist, r_prox, r_dist]
 
     elif direction == 'h':
-        l_prox, l_dist = 1.04, -1.57
+        l_prox, l_dist = 0.92, -1.54
         r_prox, r_dist = -l_prox, -l_dist
         start_contact_pose = [l_prox, l_dist, r_prox, r_dist]
 
@@ -163,26 +163,26 @@ if __name__ == "__main__":
     p.changeDynamics(gripperID, 1, rollingFriction=roll_fric)
     p.changeDynamics(gripperID, 3, rollingFriction=roll_fric)
 
-    # l_cp_info = p.getContactPoints(objectID, gripperID, linkIndexB=gripper.joint_dict[b'l_distal_pin'])
-    # r_cp_info = p.getContactPoints(objectID, gripperID, linkIndexB=gripper.joint_dict[b'r_distal_pin'])
-    # l_link_state = p.getLinkState(gripperID, gripper.joint_dict[b'l_distal_pin'])
-    # r_link_state = p.getLinkState(gripperID, gripper.joint_dict[b'r_distal_pin'])
-    # l_link_origin = p.invertTransform(l_link_state[0], l_link_state[1])
-    # r_link_origin = p.invertTransform(r_link_state[0], r_link_state[1])
-    # l_link_l_cp = p.multiplyTransforms(l_link_origin[0], l_link_origin[1], l_cp_info[0][5], cube.curr_orn)
-    # r_link_r_cp = p.multiplyTransforms(r_link_origin[0], r_link_origin[1], r_cp_info[0][5], cube.curr_orn)
-    #
-    # cube_origin = p.invertTransform(cube.curr_pos, cube.curr_orn)
-    # cube_l_cp = p.multiplyTransforms(cube_origin[0], cube_origin[1], l_cp_info[0][5], cube.curr_orn)
-    # cube_r_cp = p.multiplyTransforms(cube_origin[0], cube_origin[1], r_cp_info[0][5], cube.curr_orn)
-    #
-    #
-    # p.createConstraint(objectID, -1, gripperID, gripper.joint_dict[b'l_distal_pin'], p.JOINT_PRISMATIC, [0.0, 0.0, 0],
-    #                    cube_l_cp[0], l_link_l_cp[0], parentFrameOrientation=cube_l_cp[1],
-    #                    childFrameOrientation=l_link_l_cp[1])
-    # p.createConstraint(objectID, -1, gripperID, gripper.joint_dict[b'r_distal_pin'], p.JOINT_PRISMATIC, [0.0, 0.0, 0],
-    #                    cube_r_cp[0], r_link_r_cp[0], parentFrameOrientation=cube_r_cp[1],
-    #                    childFrameOrientation=r_link_r_cp[1])
+    l_cp_info = p.getContactPoints(objectID, gripperID, linkIndexB=gripper.joint_dict[b'l_distal_pin'])
+    r_cp_info = p.getContactPoints(objectID, gripperID, linkIndexB=gripper.joint_dict[b'r_distal_pin'])
+    l_link_state = p.getLinkState(gripperID, gripper.joint_dict[b'l_distal_pin'])
+    r_link_state = p.getLinkState(gripperID, gripper.joint_dict[b'r_distal_pin'])
+    l_link_origin = p.invertTransform(l_link_state[0], l_link_state[1])
+    r_link_origin = p.invertTransform(r_link_state[0], r_link_state[1])
+    l_link_l_cp = p.multiplyTransforms(l_link_origin[0], l_link_origin[1], l_cp_info[0][5], cube.curr_orn)
+    r_link_r_cp = p.multiplyTransforms(r_link_origin[0], r_link_origin[1], r_cp_info[0][5], cube.curr_orn)
+
+    cube_origin = p.invertTransform(cube.curr_pos, cube.curr_orn)
+    cube_l_cp = p.multiplyTransforms(cube_origin[0], cube_origin[1], l_cp_info[0][5], cube.curr_orn)
+    cube_r_cp = p.multiplyTransforms(cube_origin[0], cube_origin[1], r_cp_info[0][5], cube.curr_orn)
+
+
+    p.createConstraint(objectID, -1, gripperID, gripper.joint_dict[b'l_distal_pin'], p.JOINT_PRISMATIC, [0.0, 0.0, 0],
+                       cube_l_cp[0], l_link_l_cp[0], parentFrameOrientation=cube_l_cp[1],
+                       childFrameOrientation=l_link_l_cp[1])
+    p.createConstraint(objectID, -1, gripperID, gripper.joint_dict[b'r_distal_pin'], p.JOINT_PRISMATIC, [0.0, 0.0, 0],
+                       cube_r_cp[0], r_link_r_cp[0], parentFrameOrientation=cube_r_cp[1],
+                       childFrameOrientation=r_link_r_cp[1])
 
     gripper.phase = 'Move'
     done_mov_obj = gripper.manipulate_object(cube, human_data, contact_check=True)

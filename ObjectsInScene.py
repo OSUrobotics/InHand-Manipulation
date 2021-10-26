@@ -24,7 +24,7 @@ class SceneObject:
         self.next_pos = None
         self.next_orn = None
         self.start_pos, self.start_orn = p.getBasePositionAndOrientation(self.object_id)
-        self.cube_size = 0.04
+        self.cube_size = 0.03
         # TODO: change this to reflect number of contact points
         self.start_pos_left, self.start_orn_left = (self.start_pos[0] - self.cube_size,
                                                     self.start_pos[1] - self.cube_size,
@@ -35,6 +35,7 @@ class SceneObject:
         self.start_cp = [(self.start_pos_left, self.start_orn_left), (self.start_pos_right, self.start_orn_right)]
         self.start_cube_start_cp = []
         self.start_pos_cube_origin, self.start_orn_cube_origin = p.invertTransform(self.start_pos, self.start_orn)
+        # print("Start Pos Origin: {}\nStart Pos cube: {}\nStart Orn: {}\nTransformed: {}".format(self.start_pos, self.start_pos_cube_origin, self.start_orn, p.multiplyTransforms(self.start_pos, self.start_orn, [0.0, 0.03, 0.0], self.start_orn)))
         for index in range(0, len(self.start_cp)):
             self.start_cube_start_cp.append(p.multiplyTransforms(self.start_pos_cube_origin, self.start_orn_cube_origin,
                                                                                 self.start_cp[index][0],
@@ -60,8 +61,11 @@ class SceneObject:
 
         # Non -normalized data
         # print(data[0], data[1], data[2])
-        self.next_pos = (data[4] * scale, 0.0, data[5] * scale)
-        orn_eul = [0, radians(data[6]), 0]
+        # self.next_pos = (data[4] * scale, 0.0, data[5] * scale)
+        # orn_eul = [0, radians(data[6]), 0]
+
+        self.next_pos = (data[4] * scale, data[5] * scale, 0.0)
+        orn_eul = [0, 0, radians(data[6])]
 
         self.next_orn = p.getQuaternionFromEuler(orn_eul)
 

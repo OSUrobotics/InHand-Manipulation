@@ -1,6 +1,6 @@
 "PASS ARGUMENTS HERE:"
 --camera_view=TOP
---path_to_human_data=Human Study Data/asterisk_test_data_for_anjali/trial_paths/not_normalized/sub1_2v2_c_n_1.csv
+--path_to_human_data=Human Study Data/asterisk_test_data_for_anjali/trial_paths/not_normalized/sub1_2v2_b_n_1.csv
 --open_fingers_pose=1.57
 --open_fingers_pose=0.0
 --open_fingers_pose=-1.57

@@ -290,6 +290,8 @@ class Manipulator(SceneObject):
         :return:
         """
         cube.get_next_pose(data)
+        self.cube_next_pos = cube.next_pos
+        self.cube_next_orn = cube.next_orn
         T_origin_next_pose_cube = p.multiplyTransforms(cube.start_pos, cube.start_orn, cube.next_pos, cube.next_orn)
         return T_origin_next_pose_cube
 
@@ -339,21 +341,21 @@ class Manipulator(SceneObject):
         cube.get_curr_pose()
 
         T_cube_origin = p.invertTransform(cube.curr_pos, cube.curr_orn)
-        T_origin_new_cp_pos = []
-        T_origin_new_cp_orn = []
-        T_origin_new_link_pos = []
-        T_origin_new_link_orn = []
+        self.T_origin_new_cp_pos = []
+        self.T_origin_new_cp_orn = []
+        self.T_origin_new_link_pos = []
+        self.T_origin_new_link_orn = []
         for i in range(0, len(self.end_effector_indices)):
             T_origin_new_cp = self.get_origin_cp(i, cube, T_cube_origin, T_origin_nextpose_cube, curr_contact_points)
-            T_origin_new_cp_pos.append(T_origin_new_cp[0])
-            T_origin_new_cp_orn.append(T_origin_new_cp[1])
-            T_origin_nl = self.get_origin_links(i, self.end_effector_indices[i], T_origin_new_cp_pos,
-                                                T_origin_new_cp_orn, curr_contact_points)
-            T_origin_new_link_pos.append(T_origin_nl[0])
-            T_origin_new_link_orn.append(T_origin_nl[1])
+            self.T_origin_new_cp_pos.append(T_origin_new_cp[0])
+            self.T_origin_new_cp_orn.append(T_origin_new_cp[1])
+            T_origin_nl = self.get_origin_links(i, self.end_effector_indices[i], self.T_origin_new_cp_pos,
+                                                self.T_origin_new_cp_orn, curr_contact_points)
+            self.T_origin_new_link_pos.append(T_origin_nl[0])
+            self.T_origin_new_link_orn.append(T_origin_nl[1])
 
-        return [T_origin_new_cp_pos, T_origin_new_cp_orn, T_origin_new_link_pos, T_origin_new_link_orn,
-                T_origin_nextpose_cube]
+        return [self.T_origin_new_cp_pos, self.T_origin_new_cp_orn, self.T_origin_new_link_pos,
+                self.T_origin_new_link_orn, T_origin_nextpose_cube]
 
     def get_origin_no_cp_pts(self, cube, index, T_origin_target):
         T_origin_no_cp = p.multiplyTransforms(T_origin_target[0], T_origin_target[1], cube.start_cube_start_cp[index][0]
@@ -447,18 +449,24 @@ class Manipulator(SceneObject):
         :param cube:
         :return:
         """
-        if self.phase is 'Move':
-            pos = cube.next_pos
-            quat_orn = cube.next_orn
+        if self.phase is 'Move' and self.cube_subtract_from_pos is not None:
+            pos_in_start, orn_in_start = cube.next_pos, cube.next_orn
+            pos, quat_orn = p.multiplyTransforms(cube.start_pos, cube.start_orn, pos_in_start, orn_in_start)
+            # pos = cube.next_pos
+            # quat_orn = cube.next_orn
             if quat_orn is not None:
                 orn = p.getEulerFromQuaternion(quat_orn)
             else:
                 orn = None
+            print("\n\n@@@@@@@@@ \nCube start pos: {} {}\nCurr Pos in Cube: {} {}\nCuss Pos in Origin:{} {}\n\n".format(
+                cube.start_pos, p.getEulerFromQuaternion(cube.start_orn), cube.next_pos, p.getEulerFromQuaternion(cube.next_orn), pos, orn))
+
         else:
             pos = None
             orn = None
+            pos_in_start = None
         self.add_column(column_name='human_cube_pos', column_data=pos)
-        self.add_column(column_name='human_cube_orn', column_data=orn)
+        self.add_column(column_name='human_cube_orn', column_data=pos_in_start)
 
     def save_cube_data(self, cube):
         # print("CUBE? {}:".format(cube))
@@ -468,6 +476,7 @@ class Manipulator(SceneObject):
             cube_orn = p.getEulerFromQuaternion(cube_pose[1])
 
             if not self.only_first_entry and self.phase is 'Move':
+                cube.start_pos, cube.start_orn = cube_pos, cube_pose[1]
                 self.cube_subtract_from_pos = p.invertTransform(cube_pose[0], cube_pose[1])
                 # self.cube_subtract_from_pos = cube_pose[0]
 
@@ -480,21 +489,28 @@ class Manipulator(SceneObject):
         self.add_column(column_name='Cube_Orn', column_data=cube_orn)
 
     def save_links_data(self):
-        links_info = p.getLinkStates(self.gripper_id, linkIndices=list(self.joint_dict.values()))
-        for i in range(len(self.key_names_list)):
-            link_pos_x = links_info[i][4][0]
-            link_pos_y = links_info[i][4][1]
-            link_pos_z = links_info[i][4][2]
-            link_orn = p.getEulerFromQuaternion(links_info[i][5])
-            link_orn_x = link_orn[0]
-            link_orn_y = link_orn[1]
-            link_orn_z = link_orn[2]
-            self.add_column(column_name='{}_{}'.format(self.key_names_list[i], 'link_pos'), column_data=[link_pos_x,
-                                                                                                         link_pos_y,
-                                                                                                         link_pos_z])
-            self.add_column(column_name='{}_{}'.format(self.key_names_list[i], 'link_orn'), column_data=[link_orn_x,
-                                                                                                         link_orn_y,
-                                                                                                         link_orn_z])
+        # links_info = p.getLinkStates(self.gripper_id, linkIndices=list(self.joint_dict.values()))
+        # for i in range(len(self.key_names_list)):
+        #     link_pos_x = links_info[i][4][0]
+        #     link_pos_y = links_info[i][4][1]
+        #     link_pos_z = links_info[i][4][2]
+        #     link_orn = p.getEulerFromQuaternion(links_info[i][5])
+        #     link_orn_x = link_orn[0]
+        #     link_orn_y = link_orn[1]
+        #     link_orn_z = link_orn[2]
+        #     self.add_column(column_name='{}_{}'.format(self.key_names_list[i], 'link_pos'), column_data=[link_pos_x,
+        #                                                                                                  link_pos_y,
+        #                                                                                                  link_pos_z])
+        #     self.add_column(column_name='{}_{}'.format(self.key_names_list[i], 'link_orn'), column_data=[link_orn_x,
+        #                                                                                                  link_orn_y,
+        #                                                                                                  link_orn_z])
+        if self.phase is 'Move' and self.cube_subtract_from_pos is not None:
+            self.add_column(column_name='link_pos_l_dist', column_data=self.T_origin_new_link_pos[0])
+            self.add_column(column_name='link_pos_r_dist', column_data=self.T_origin_new_link_pos[1])
+        else:
+            self.add_column(column_name='link_pos_l_dist', column_data=None)
+            self.add_column(column_name='link_pos_r_dist', column_data=None)
+
 
     def save_joints_data(self):
         joints_info = p.getJointStates(self.gripper_id, jointIndices=list(self.joint_dict.values()))
@@ -519,7 +535,7 @@ class Manipulator(SceneObject):
         contact_points_info = []
         data = []
         in_contact = []
-        if cube is not None:
+        if self.phase is 'Move' and self.cube_subtract_from_pos is not None and cube is not None:
             for i in range(0, len(self.end_effector_indices)):
                 contact_points_info.append(p.getContactPoints(cube.object_id, self.gripper_id,
                                                               linkIndexB=self.end_effector_indices[i]))
@@ -531,6 +547,10 @@ class Manipulator(SceneObject):
                     raise IndexError
 
                 if len(contact_points_info[i]) > 0:
+                    # cp_in_start_cube = p.multiplyTransforms(self.cube_subtract_from_pos[0],
+                    #                                         self.cube_subtract_from_pos[1],
+                    #                                         contact_points_info[i][0][6], self.T_origin_new_cp_orn[i])
+                    # data.append(cp_in_start_cube[0])
                     for j in range(6, 10):
                         data.append(contact_points_info[i][0][j])
                     in_contact.append(True)
@@ -571,14 +591,45 @@ class Manipulator(SceneObject):
             new_pos = None
         self.add_column(column_name='Cube_pos_in_start_pos', column_data=new_pos)
 
+    def save_calc_contact_data(self):
+        if self.phase is 'Move' and self.cube_subtract_from_pos is not None:
+            # self.add_column(column_name='calc_cp_l', column_data=self.T_origin_new_cp_pos[0])
+            # self.add_column(column_name='calc_cp_r', column_data=self.T_origin_new_cp_pos[1])
+
+            # cp_in_start_cube_l = p.multiplyTransforms(self.cube_subtract_from_pos[0], self.cube_subtract_from_pos[1],
+            #                                           self.T_origin_new_cp_pos[0], self.T_origin_new_cp_orn[0])
+            # self.add_column(column_name='calc_cp_l', column_data=cp_in_start_cube_l[0])
+            self.add_column(column_name='calc_cp_l', column_data=self.T_origin_new_cp_pos[0])
+
+            # cp_in_start_cube_r = p.multiplyTransforms(self.cube_subtract_from_pos[0], self.cube_subtract_from_pos[1],
+            #                                           self.T_origin_new_cp_pos[1], self.T_origin_new_cp_orn[1])
+            # self.add_column(column_name='calc_cp_r', column_data=cp_in_start_cube_r[0])
+            self.add_column(column_name='calc_cp_r', column_data=self.T_origin_new_cp_pos[1])
+
+        else:
+            new_pos = None
+            self.add_column(column_name='calc_cp_l', column_data=new_pos)
+            self.add_column(column_name='calc_cp_r', column_data=new_pos)
+
+    def save_cube_next_pose(self):
+        if self.phase is 'Move':
+            next_pose = self.cube_next_pos
+        else:
+            next_pose = None
+
+        self.add_column(column_name='cube_next_pos', column_data=next_pose)
+
+
     def save_data(self, cube):
         self.add_column(column_name='Phase', column_data=self.phase)
-        self.save_human_data(cube)
         self.save_cube_data(cube)
+        self.save_human_data(cube)
         self.get_cube_in_start_pos(cube)
+        self.save_cube_next_pose()
         self.save_links_data()
         self.save_joints_data()
         self.save_contact_data(cube)
+        self.save_calc_contact_data()
 
     def add_column(self, column_name='', column_data=None):
         if column_name not in self.save_data_dict.keys():

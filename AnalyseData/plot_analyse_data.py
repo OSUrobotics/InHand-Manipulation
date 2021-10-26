@@ -42,12 +42,12 @@ def plot_expected_data(dir):
         raise ValueError
 
 
-def plot_single_data(df, x=0, y=1, scale=1.0, color='red', track=True):
+def plot_single_data(df, x=0, y=1, scale=[1.0, 1.0], color='red', track=True):
     x_data = []
     y_data = []
     for line in df:
-        x_data.append(scale * line[x])
-        y_data.append(scale * line[y])
+        x_data.append(scale[0] * line[x])
+        y_data.append(scale[1] * line[y])
     # print("DATA 0: {},\n DATA 1: {},\n DATA: {}".format(data[:][0], data[1], data))
     if track:
         p = plt.plot(x_data, y_data, color)
@@ -78,9 +78,9 @@ def plot_multiple_data(data, labels, title, dir, save=False, filename='', track=
         legends.append(data_to_plot[4])
         # plt.legend([data_to_plot[4]])
 
-    plot_pointers.append(plot_expected_data(dir=dir)[0])
+    # plot_pointers.append(plot_expected_data(dir=dir)[0])
 
-    legends.append('Expected Trial')
+    # legends.append('Expected Trial')
     # print("{}\n\n{}".format(plot_pointers, legends))
     plt.legend(plot_pointers, legends)
     if track:
@@ -123,8 +123,8 @@ def plot_track_human_and_controller(data):
         # print("HELLO", line1, line2)
         # print("HELLO: {}, I: ".format(line.values))
         # print("Scale: {} i: {}, ".format(line.values, i))
-        plt.plot([scale_data_1*line1[x_data_1], scale_data_2*line2[x_data_2]], [scale_data_1*line1[y_data_1],
-                                                                                scale_data_2*line2[y_data_2]], 'gray',
+        plt.plot([scale_data_1[0]*line1[x_data_1], scale_data_2[0]*line2[x_data_2]], [scale_data_1[1]*line1[y_data_1],
+                                                                                scale_data_2[1]*line2[y_data_2]], 'gray',
                  linestyle='dotted')
 
 
@@ -138,16 +138,18 @@ def set_axis_limits(dir):
         limits_y = np.arange(0, 0.05, step_x)
         plt.xlim([-0.006, 0.006])
     elif dir == 'b':
-        limits_x = np.arange(0, 0.08, step_x)
-        limits_y = np.arange(-0.01, 0.05, step_x)
-        plt.xlim([0, 0.08])
-        plt.ylim([-0.01, 0.05])
+        return plt
+        # limits_x = np.arange(0, 0.08, step_x)
+        # limits_y = np.arange(-0.01, 0.05, step_x)
+        # plt.xlim([0, 0.08])
+        # plt.ylim([-0.01, 0.05])
     elif dir == 'c':
-        limits_x = np.arange(-0.008, 0.08, step_x)
-        limits_y = np.arange(-0.012, 0.012, step_y)
-        plt.xlim([-0.008, 0.08])
-        # plt.ylim([-0.008, 0.08])
-        plt.ylim([-0.012, 0.012])
+        return plt
+        # limits_x = np.arange(-0.008, 0.08, step_x)
+        # limits_y = np.arange(-0.012, 0.012, step_y)
+        # plt.xlim([-0.008, 0.08])
+        # # plt.ylim([-0.008, 0.08])
+        # plt.ylim([-0.012, 0.012])
     elif dir == 'd':
         limits_x = np.arange(0, 0.050, step_x)
         limits_y = np.arange(-0.04, 0.04, step_x)
@@ -217,15 +219,32 @@ if __name__ == '__main__':
             saved_df_controller = analyse_data.get_data(saved_data_file_name)
             human_data_col = get_data(saved_df_controller, find_in='human_cube_pos', strip_out='()')
             # print("HU: {}".format(human_data_col))
-            # hello = plot_single_data(human_data_col, y=2, scale=1)
+            # hello = plot_single_data(human_data_col, y=2, scale=[1, 1])
             # plt.show()
-            controller_data_col = get_data(saved_df_controller, find_in='Cube_pos_in_start_pos', strip_out='[]')
-            # print("CON: {}".format(controller_data_col))
-            # hello = plot_single_data(controller_data_col, y=2, scale=1)
+            controller_data_col = get_data(saved_df_controller, find_in='Cube_Pos', strip_out='()')
+            calc_cp_data_l = get_data(saved_df_controller, find_in='calc_cp_l', strip_out='()')
+            # print("HU: {}".format(human_data_col))
+            # hello = plot_single_data(calc_cp_data_l, y=2, scale=[1, 1])
             # plt.show()
-            plot1 = [human_data_col, 0, 2, 1, 'Human Trial', 'blue']
-            plot2 = [controller_data_col, 0, 1, 1, 'Controller', 'red']
-            all_plots = [plot1, plot2]
+            calc_cp_data_r = get_data(saved_df_controller, find_in='calc_cp_r', strip_out='()')
+            cp_data_l = get_data(saved_df_controller, find_in='contact_point_l_dist', strip_out='()')
+            cp_data_r = get_data(saved_df_controller, find_in='contact_point_r_dist', strip_out='()')
+
+            link_data_l = get_data(saved_df_controller, find_in='link_pos_l_dist', strip_out='()')
+            # hello = plot_single_data(link_data_l, y=1, scale=[1, 1])
+            # plt.show()
+            link_data_r = get_data(saved_df_controller, find_in='link_pos_r_dist', strip_out='()')
+
+            plot1 = [human_data_col, 0, 1, [1, 1], 'Human Trial', 'blue']
+            plot2 = [controller_data_col, 0, 1, [1, 1], 'Controller', 'red']
+            plot3 = [calc_cp_data_l, 0, 1, [1, 1], 'calc_CP_L', 'orange']
+            plot4 = [calc_cp_data_r, 0, 1, [1, 1], 'calc_CP_R', 'cyan']
+            plot5 = [cp_data_l, 0, 1, [1, 1], 'CP_L', 'black']
+            plot6 = [cp_data_r, 0, 1, [1, 1], 'CP_R', 'brown']
+            plot7 = [link_data_l, 0, 1, [1, 1], 'link_L', 'pink']
+            plot8 = [link_data_r, 0, 1, [1, 1], 'link_R', 'yellow']
+
+            all_plots = [plot1, plot2] #, plot5, plot6, plot3, plot4]#, plot7, plot8]
         else:
             saved_data_controller_from_human = directory+'/{}_{}_2v2_{}_n_{}_kp{}_kd{}_dp{}_step{}_save_data.csv'.\
                 format(hand, trial_hum, dir, trial_num, kp, kd, dp, step)
@@ -274,5 +293,5 @@ if __name__ == '__main__':
         else:
             fig_name = '{}_{}_all_plots_kp{}_kd{}_dp{}_steps{}.png'.format(save_trial, dir, kp, kd, dp, step)
         one_plot = [[human_data_col, 0, 2, 1, 'Human Trial']]
-        plot_multiple_data(all_plots, labels=['X position in cms', 'Y position in cms'],
+        plot_multiple_data(all_plots, labels=['X position in mts', 'Y position in mts'],
                            title='Movement of Cube in {}'.format(dir), dir=dir, save=save_plot, filename=fig_name, track=track)
